@@ -115,10 +115,10 @@ fn main() {
     let mut trigrams_table: HashMap<String, u32> = HashMap::new();
 
     for letter in corpus.chars() {
-        let key = layout.get(&letter).unwrap();
-        let previous_key = layout.get(&previous_letter).unwrap();
-        let skip_previous_key = layout.get(&skip_previous_letter).unwrap();
-        let epic_previous_key = layout.get(&epic_previous_letter).unwrap();
+        let key = &layout[&letter];
+        let previous_key = &layout[&previous_letter];
+        let skip_previous_key = &layout[&skip_previous_letter];
+        let epic_previous_key = &layout[&epic_previous_letter];
 
         if previous_letter != '_' && letter != '_' {
             bigrams += 1;
