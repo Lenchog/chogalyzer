@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fs};
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+//#[derive(Debug, Eq, Hash, PartialEq)]
 struct Key {
     hand: u8,
-    finger: u8,
+    finger: Finger,
     row: u8,
     lateral: bool,
 }
@@ -17,6 +17,15 @@ enum Trigram {
     WeakRed,
     Red,
     ThumbStat,
+}
+
+#[derive(PartialEq, PartialOrd)]
+enum Finger {
+    Thumb,
+    Index,
+    Middle,
+    Ring,
+    Pinky,
 }
 
 fn main() {
@@ -44,44 +53,44 @@ fn main() {
     #[rustfmt::skip]
     let layout = HashMap::from([
         // LH top row
-        ( layout_raw[0], Key { hand: 0, finger: 5, row: 0, lateral: false, },),
-        ( layout_raw[1], Key { hand: 0, finger: 4, row: 0, lateral: false, },),
-        ( layout_raw[2], Key { hand: 0, finger: 3, row: 0, lateral: false, },),
-        ( layout_raw[3], Key { hand: 0, finger: 2, row: 0, lateral: false, },),
-        ( layout_raw[4], Key { hand: 0, finger: 2, row: 0, lateral: true, },),
+        ( layout_raw[0], Key { hand: 0, finger: Finger::Pinky, row: 0, lateral: false, },),
+        ( layout_raw[1], Key { hand: 0, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[2], Key { hand: 0, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[3], Key { hand: 0, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[4], Key { hand: 0, finger: Finger::Index, row: 0, lateral: true, },),
         // RH top row
-        ( layout_raw[5], Key { hand: 1, finger: 2, row: 0, lateral: true, },),
-        ( layout_raw[6], Key { hand: 1, finger: 2, row: 0, lateral: false, },),
-        ( layout_raw[7], Key { hand: 1, finger: 3, row: 0, lateral: false, },),
-        ( layout_raw[8], Key { hand: 1, finger: 4, row: 0, lateral: false, },),
-        ( layout_raw[9], Key { hand: 1, finger: 5, row: 0, lateral: false, },),
+        ( layout_raw[5], Key { hand: 1, finger: Finger::Index, row: 0, lateral: true, },),
+        ( layout_raw[6], Key { hand: 1, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[7], Key { hand: 1, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[8], Key { hand: 1, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[9], Key { hand: 1, finger: Finger::Pinky, row: 0, lateral: false, },),
         // LH middle row
-        ( layout_raw[10], Key { hand: 0, finger: 5, row: 1, lateral: false, },),
-        ( layout_raw[11], Key { hand: 0, finger: 4, row: 1, lateral: false, },),
-        ( layout_raw[12], Key { hand: 0, finger: 3, row: 1, lateral: false, },),
-        ( layout_raw[13], Key { hand: 0, finger: 2, row: 1, lateral: false, },),
-        ( layout_raw[14], Key { hand: 0, finger: 2, row: 1, lateral: true, },),
+        ( layout_raw[10], Key { hand: 0, finger: Finger::Pinky, row: 1, lateral: false, },),
+        ( layout_raw[11], Key { hand: 0, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[12], Key { hand: 0, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[13], Key { hand: 0, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[14], Key { hand: 0, finger: Finger::Index, row: 1, lateral: true, },),
         // RH middle row
-        ( layout_raw[15], Key { hand: 1, finger: 2, row: 1, lateral: true, },),
-        ( layout_raw[16], Key { hand: 1, finger: 2, row: 1, lateral: false, },),
-        ( layout_raw[17], Key { hand: 1, finger: 3, row: 1, lateral: false, },),
-        ( layout_raw[18], Key { hand: 1, finger: 4, row: 1, lateral: false, },),
-        ( layout_raw[19], Key { hand: 1, finger: 5, row: 1, lateral: false, },),
+        ( layout_raw[15], Key { hand: 1, finger: Finger::Index, row: 1, lateral: true, },),
+        ( layout_raw[16], Key { hand: 1, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[17], Key { hand: 1, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[18], Key { hand: 1, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[19], Key { hand: 1, finger: Finger::Pinky, row: 1, lateral: false, },),
         // LH bottom row
-        ( layout_raw[20], Key { hand: 0, finger: 5, row: 2, lateral: false, },),
-        ( layout_raw[21], Key { hand: 0, finger: 4, row: 2, lateral: false, },),
-        ( layout_raw[22], Key { hand: 0, finger: 3, row: 2, lateral: false, },),
-        ( layout_raw[23], Key { hand: 0, finger: 2, row: 2, lateral: false, },),
-        ( layout_raw[24], Key { hand: 0, finger: 2, row: 2, lateral: true, },),
+        ( layout_raw[20], Key { hand: 0, finger: Finger::Pinky, row: 2, lateral: false, },),
+        ( layout_raw[21], Key { hand: 0, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[22], Key { hand: 0, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[23], Key { hand: 0, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[24], Key { hand: 0, finger: Finger::Index, row: 2, lateral: true, },),
         // RH bottom row
-        ( layout_raw[25], Key { hand: 1, finger: 2, row: 2, lateral: true, },),
-        ( layout_raw[26], Key { hand: 1, finger: 2, row: 2, lateral: false, },),
-        ( layout_raw[27], Key { hand: 1, finger: 3, row: 2, lateral: false, },),
-        ( layout_raw[28], Key { hand: 1, finger: 4, row: 2, lateral: false, },),
-        ( layout_raw[29], Key { hand: 1, finger: 5, row: 2, lateral: false, },),
+        ( layout_raw[25], Key { hand: 1, finger: Finger::Index, row: 2, lateral: true, },),
+        ( layout_raw[26], Key { hand: 1, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[27], Key { hand: 1, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[28], Key { hand: 1, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[29], Key { hand: 1, finger: Finger::Pinky, row: 2, lateral: false, },),
         // Thumb keys
-        ( layout_raw[30], Key { hand: 0, finger: 1, row: 3, lateral: false, },),
-        ( layout_raw[31], Key { hand: 1, finger: 1, row: 3, lateral: false, },),
+        ( layout_raw[30], Key { hand: 0, finger: Finger::Thumb, row: 3, lateral: false, },),
+        ( layout_raw[31], Key { hand: 1, finger: Finger::Thumb, row: 3, lateral: false, },),
     ]);
 
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
@@ -160,7 +169,7 @@ fn main() {
             }
         }
 
-        if !(key.finger == 1 || previous_key.finger == 1 || skip_previous_key.finger == 1) {
+        if !(key.finger == Finger::Thumb || previous_key.finger == Finger::Thumb || skip_previous_key.finger == Finger::Thumb) {
             trigrams += 1;
             *trigrams_table
                 .entry(previous_letter.to_string() + &letter.to_string())
@@ -289,12 +298,12 @@ fn main() {
     let inrollpercent = inroll as f64 * 100.0 / trigrams as f64;
     let outrollpercent = outroll as f64 * 100.0 / trigrams as f64;
     let inthreerollpercent = inthreeroll as f64 * 100.0 / trigrams as f64;
-    let out3rollpercent = outthreeroll as f64 * 100.0 / trigrams as f64;
+    let outthreerollpercent = outthreeroll as f64 * 100.0 / trigrams as f64;
     let weakredpercent = weak_red as f64 * 100.0 / trigrams as f64;
     //let thumbstatpercent = thumb_stat as f64 * 100.0 / trigrams as f64;
     let redpercent = red as f64 * 100.0 / trigrams as f64;
 
-    println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nThumb Stats: {}", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, out3rollpercent, weakredpercent, redpercent, thumb_stat);
+    println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nInFinger::MiddleRoll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nThumb Stats: {}", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, thumb_stat);
 }
 
 fn sf(key1: &Key, key2: &Key) -> bool {
@@ -312,11 +321,11 @@ fn ls(key1: &Key, key2: &Key) -> bool {
 }
 
 fn fs(key1: &Key, key2: &Key) -> bool {
-    if (((key1.finger == 4 || key1.finger == 3)
-        && (key2.finger == 5 || key2.finger == 2)
+    if (((key1.finger == Finger::Ring || key1.finger == Finger::Middle)
+        && (key2.finger == Finger::Pinky || key2.finger == Finger::Index)
         && (key1.row == 2 && key2.row == 0 || key1.row == 0 && key2.row == 2))
-        || ((key2.finger == 4 || key2.finger == 3)
-            && (key1.finger == 5 || key1.finger == 2)
+        || ((key2.finger == Finger::Ring || key2.finger == Finger::Middle)
+            && (key1.finger == Finger::Pinky || key1.finger == Finger::Index)
             && key2.row == 0
             && key1.row == 2))
         && key1.hand == key2.hand
@@ -341,7 +350,7 @@ fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
 }
 
 fn roll(key1: &Key, key2: &Key) -> Trigram {
-    if key1.finger == 1 || key2.finger == 1 {
+    if key1.finger == Finger::Thumb || key2.finger == Finger::Thumb {
         return Trigram::ThumbStat;
     }
     if key1.finger < key2.finger {
@@ -352,7 +361,7 @@ fn roll(key1: &Key, key2: &Key) -> Trigram {
 }
 
 fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
-    if key1.finger == 1 || key2.finger == 1 || key3.finger == 1 {
+    if key1.finger == Finger::Thumb || key2.finger == Finger::Thumb || key3.finger == Finger::Thumb {
         return Trigram::ThumbStat;
     }
     if key1.finger < key2.finger && key2.finger < key3.finger {
@@ -361,12 +370,12 @@ fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     if key1.finger > key2.finger && key2.finger > key3.finger {
         return Trigram::OutThreeRoll;
     }
-    if key1.finger != 2
-        && key2.finger != 2
-        && key3.finger != 2
-        && key1.finger != 1
-        && key2.finger != 1
-        && key3.finger != 1
+    if key1.finger != Finger::Index
+        && key2.finger != Finger::Index
+        && key3.finger != Finger::Index
+        && key1.finger != Finger::Thumb
+        && key2.finger != Finger::Thumb
+        && key3.finger != Finger::Thumb
     {
         return Trigram::WeakRed;
     }
