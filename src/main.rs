@@ -96,23 +96,23 @@ fn main() {
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
     let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut alt, mut inroll, mut outroll, mut inthreeroll, mut outthreeroll, mut red, mut weak_red, mut thumb_stat, mut bigrams, mut skipgrams, mut trigrams] =
         [0; 17];
-    let mut sfb_table: HashMap<String, u32> = HashMap::new();
-    let mut sfs_table: HashMap<String, u32> = HashMap::new();
-    let mut lsb_table: HashMap<String, u32> = HashMap::new();
-    let mut lss_table: HashMap<String, u32> = HashMap::new();
-    let mut fsb_table: HashMap<String, u32> = HashMap::new();
-    let mut fss_table: HashMap<String, u32> = HashMap::new();
-    let mut alt_table: HashMap<String, u32> = HashMap::new();
-    let mut inroll_table: HashMap<String, u32> = HashMap::new();
-    let mut outroll_table: HashMap<String, u32> = HashMap::new();
-    let mut inthreeroll_table: HashMap<String, u32> = HashMap::new();
-    let mut outthreeroll_table: HashMap<String, u32> = HashMap::new();
-    let mut red_table: HashMap<String, u32> = HashMap::new();
-    let mut weak_red_table: HashMap<String, u32> = HashMap::new();
-    let mut thumb_stat_table: HashMap<String, u32> = HashMap::new();
-    let mut bigrams_table: HashMap<String, u32> = HashMap::new();
-    let mut skipgrams_table: HashMap<String, u32> = HashMap::new();
-    let mut trigrams_table: HashMap<String, u32> = HashMap::new();
+    let mut sfb_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut sfs_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut lsb_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut lss_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut fsb_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut fss_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut alt_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut inroll_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut outroll_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut inthreeroll_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut outthreeroll_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut red_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut weak_red_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut thumb_stat_table: HashMap<[char; 3], u32> = HashMap::new();
+    let mut bigrams_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut skipgrams_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut trigrams_table: HashMap<[char; 3], u32> = HashMap::new();
 
     for letter in corpus.chars() {
         let key = &layout[&letter];
@@ -123,48 +123,48 @@ fn main() {
         if previous_letter != '_' && letter != '_' {
             bigrams += 1;
             *bigrams_table
-                .entry(previous_letter.to_string() + &letter.to_string())
+                .entry([previous_letter, letter])
                 .or_insert(0) += 1;
             if sf(key, previous_key) {
                 sfb += 1;
                 *sfb_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([previous_letter, letter])
                     .or_insert(0) += 1;
             }
             if ls(key, previous_key) {
                 lsb += 1;
                 *lsb_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([previous_letter, letter])
                     .or_insert(0) += 1;
             }
             if fs(key, previous_key) {
                 fsb += 1;
                 *fsb_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([previous_letter, letter])
                     .or_insert(0) += 1;
             }
         }
         if skip_previous_letter != '_' && letter != '_' {
             skipgrams += 1;
             *skipgrams_table
-                .entry(previous_letter.to_string() + &letter.to_string())
+                .entry([skip_previous_letter, letter])
                 .or_insert(0) += 1;
             if sf(key, skip_previous_key) {
                 sfs += 1;
                 *sfs_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([skip_previous_letter, letter])
                     .or_insert(0) += 1;
             }
             if ls(key, skip_previous_key) {
                 lss += 1;
                 *lss_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([skip_previous_letter, letter])
                     .or_insert(0) += 1;
             }
             if fs(key, skip_previous_key) {
                 fss += 1;
                 *fss_table
-                    .entry(previous_letter.to_string() + &letter.to_string())
+                    .entry([skip_previous_letter, letter])
                     .or_insert(0) += 1;
             }
         }
@@ -172,55 +172,55 @@ fn main() {
         if !(key.finger == Finger::Thumb || previous_key.finger == Finger::Thumb || skip_previous_key.finger == Finger::Thumb) {
             trigrams += 1;
             *trigrams_table
-                .entry(previous_letter.to_string() + &letter.to_string())
+                .entry([skip_previous_letter, previous_letter, letter])
                 .or_insert(0) += 1;
             match trigram_stat(key, previous_key, skip_previous_key) {
                 Trigram::Inroll => {
                     inroll += 1;
                     *inroll_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::Outroll => {
                     outroll += 1;
                     *outroll_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::Alt => {
                     alt += 1;
                     *alt_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::InThreeRoll => {
                     inthreeroll += 1;
                     *inthreeroll_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::OutThreeRoll => {
                     outthreeroll += 1;
                     *outthreeroll_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::Red => {
                     red += 1;
                     *red_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::WeakRed => {
                     weak_red += 1;
                     *weak_red_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
                 Trigram::ThumbStat => {
                     thumb_stat += 1;
                     *thumb_stat_table
-                        .entry(previous_letter.to_string() + &letter.to_string())
+                        .entry([skip_previous_letter, previous_letter, letter])
                         .or_insert(0) += 1;
                 }
             }
@@ -251,42 +251,42 @@ fn main() {
         previous_letter = letter
     }
 
-    let mut sfb_vec: Vec<(&String, &u32)> = sfb_table.iter().collect();
-    let mut sfs_vec: Vec<(&String, &u32)> = sfs_table.iter().collect();
-    let mut lsb_vec: Vec<(&String, &u32)> = lsb_table.iter().collect();
-    let mut lss_vec: Vec<(&String, &u32)> = lss_table.iter().collect();
-    let mut fsb_vec: Vec<(&String, &u32)> = fsb_table.iter().collect();
-    let mut fss_vec: Vec<(&String, &u32)> = fss_table.iter().collect();
-    let mut alt_vec: Vec<(&String, &u32)> = alt_table.iter().collect();
-    let mut inroll_vec: Vec<(&String, &u32)> = outroll_table.iter().collect();
-    let mut outroll_vec: Vec<(&String, &u32)> = outroll_table.iter().collect();
-    let mut inthreeroll_vec: Vec<(&String, &u32)> = inthreeroll_table.iter().collect();
-    let mut outthreeroll_vec: Vec<(&String, &u32)> = outthreeroll_table.iter().collect();
-    let mut red_vec: Vec<(&String, &u32)> = red_table.iter().collect();
-    let mut weak_vec: Vec<(&String, &u32)> = weak_red_table.iter().collect();
-    let mut thumb_vec: Vec<(&String, &u32)> = thumb_stat_table.iter().collect();
-    let mut bigrams_vec: Vec<(&String, &u32)> = bigrams_table.iter().collect();
-    let mut skipgrams_vec: Vec<(&String, &u32)> = skipgrams_table.iter().collect();
-    let mut trigrams_vec: Vec<(&String, &u32)> = trigrams_table.iter().collect();
+    let mut sfb_vec: Vec<([char; 2], u32)> = sfb_table.into_iter().collect();
+    let mut sfs_vec: Vec<([char; 2], u32)> = sfs_table.into_iter().collect();
+    let mut lsb_vec: Vec<([char; 2], u32)> = lsb_table.into_iter().collect();
+    let mut lss_vec: Vec<([char; 2], u32)> = lss_table.into_iter().collect();
+    let mut fsb_vec: Vec<([char; 2], u32)> = fsb_table.into_iter().collect();
+    let mut fss_vec: Vec<([char; 2], u32)> = fss_table.into_iter().collect();
+    let mut alt_vec: Vec<([char; 3], u32)> = alt_table.into_iter().collect();
+    let mut inroll_vec: Vec<([char; 3], u32)> = inroll_table.into_iter().collect();
+    let mut outroll_vec: Vec<([char; 3], u32)> = outroll_table.into_iter().collect();
+    let mut inthreeroll_vec: Vec<([char; 3], u32)> = inthreeroll_table.into_iter().collect();
+    let mut outthreeroll_vec: Vec<([char; 3], u32)> = outthreeroll_table.into_iter().collect();
+    let mut red_vec: Vec<([char; 3], u32)> = red_table.into_iter().collect();
+    let mut weak_vec: Vec<([char; 3], u32)> = weak_red_table.into_iter().collect();
+    let mut thumb_vec: Vec<([char; 3], u32)> = thumb_stat_table.into_iter().collect();
+    let mut bigrams_vec: Vec<([char; 2], u32)> = bigrams_table.into_iter().collect();
+    let mut skipgrams_vec: Vec<([char; 2], u32)> = skipgrams_table.into_iter().collect();
+    let mut trigrams_vec: Vec<([char; 3], u32)> = trigrams_table.into_iter().collect();
 
-    sfb_vec.sort_by(|a, b| b.1.cmp(a.1));
-    sfs_vec.sort_by(|a, b| b.1.cmp(a.1));
-    lsb_vec.sort_by(|a, b| b.1.cmp(a.1));
-    lss_vec.sort_by(|a, b| b.1.cmp(a.1));
-    fsb_vec.sort_by(|a, b| b.1.cmp(a.1));
-    fss_vec.sort_by(|a, b| b.1.cmp(a.1));
-    alt_vec.sort_by(|a, b| b.1.cmp(a.1));
-    inroll_vec.sort_by(|a, b| b.1.cmp(a.1));
-    outroll_vec.sort_by(|a, b| b.1.cmp(a.1));
-    inthreeroll_vec.sort_by(|a, b| b.1.cmp(a.1));
-    outthreeroll_vec.sort_by(|a, b| b.1.cmp(a.1));
-    red_vec.sort_by(|a, b| b.1.cmp(a.1));
-    weak_vec.sort_by(|a, b| b.1.cmp(a.1));
-    thumb_vec.sort_by(|a, b| b.1.cmp(a.1));
-    thumb_vec.sort_by(|a, b| b.1.cmp(a.1));
-    bigrams_vec.sort_by(|a, b| b.1.cmp(a.1));
-    skipgrams_vec.sort_by(|a, b| b.1.cmp(a.1));
-    trigrams_vec.sort_by(|a, b| b.1.cmp(a.1));
+    sfb_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    sfs_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    lsb_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    lss_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    fsb_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    fss_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    alt_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    inroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    outroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    inthreeroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    outthreeroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    red_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    weak_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    thumb_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    thumb_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    bigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    skipgrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    trigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
     trigrams -= thumb_stat;
     let sfbpercent = sfb as f64 * 100.0 / bigrams as f64;
     let sfspercent = sfs as f64 * 100.0 / skipgrams as f64;
