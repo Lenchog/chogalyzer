@@ -1,6 +1,5 @@
 use std::{collections::HashMap, fs};
 
-//#[derive(Debug, Eq, Hash, PartialEq)]
 struct Key {
     hand: u8,
     finger: Finger,
