@@ -373,13 +373,13 @@ fn main() {
     let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut bigrams, mut skipgrams, mut trigrams] =
         [0; 9];
     let mut sfb_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut sfs_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut sfs_table: HashMap<[char; 3], u32> = HashMap::new();
     let mut lsb_table: HashMap<[char; 2], u32> = HashMap::new();
     let mut lss_table: HashMap<[char; 2], u32> = HashMap::new();
     let mut fsb_table: HashMap<[char; 2], u32> = HashMap::new();
     let mut fss_table: HashMap<[char; 2], u32> = HashMap::new();
     let mut bigrams_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut skipgrams_table: HashMap<[char; 2], u32> = HashMap::new();
+    let mut skipgrams_table: HashMap<[char; 3], u32> = HashMap::new();
     let mut trigrams_table: HashMap<[char; 3], u32> = HashMap::new();
     let mut trigrams_mega_table: HashMap<Trigram, (u32, HashMap<[char; 3], u32>)> = HashMap::new();
 
@@ -408,11 +408,11 @@ fn main() {
         if skip_previous_letter != '⎵' && letter != '⎵' {
             skipgrams += 1;
             *skipgrams_table
-                .entry([skip_previous_letter, letter])
+                .entry([skip_previous_letter, '_', letter])
                 .or_insert(0) += 1;
             if sf(key, skip_previous_key) {
                 sfs += 1;
-                *sfs_table.entry([skip_previous_letter, letter]).or_insert(0) += 1;
+                *sfs_table.entry([skip_previous_letter, '_', letter]).or_insert(0) += 1;
             }
             if ls(key, skip_previous_key) {
                 lss += 1;
@@ -503,7 +503,7 @@ fn main() {
         / trigrams as f32;
 
     let mut sfb_vec: Vec<([char; 2], u32)> = sfb_table.into_iter().collect();
-    let mut sfs_vec: Vec<([char; 2], u32)> = sfs_table.into_iter().collect();
+    let mut sfs_vec: Vec<([char; 3], u32)> = sfs_table.into_iter().collect();
     let mut lsb_vec: Vec<([char; 2], u32)> = lsb_table.into_iter().collect();
     let mut lss_vec: Vec<([char; 2], u32)> = lss_table.into_iter().collect();
     let mut fsb_vec: Vec<([char; 2], u32)> = fsb_table.into_iter().collect();
@@ -560,7 +560,7 @@ fn main() {
 
     let mut trigrams_vec: Vec<([char; 3], u32)> = trigrams_table.into_iter().collect();
     let mut bigrams_vec: Vec<([char; 2], u32)> = bigrams_table.into_iter().collect();
-    let mut skipgrams_vec: Vec<([char; 2], u32)> = skipgrams_table.into_iter().collect();
+    let mut skipgrams_vec: Vec<([char; 3], u32)> = skipgrams_table.into_iter().collect();
 
     sfb_vec.sort_by(|a, b| b.1.cmp(&a.1));
     sfs_vec.sort_by(|a, b| b.1.cmp(&a.1));
@@ -584,7 +584,7 @@ fn main() {
     match args.command.as_str() {
         "analyze" => println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nSF%: {}\nThumb Stat%: {}\n", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, trigramsfpercent, thumbstatpercent),
         "sfb" => print_bigrams(sfb_vec, bigrams, "SFB".to_string()),
-        "sfs" => print_bigrams(sfs_vec, skipgrams, "SFS".to_string()),
+        "sfs" => print_trigrams(sfs_vec, skipgrams, "SFS".to_string()),
         "lsbs" => print_bigrams(lsb_vec, bigrams, "LSB".to_string()),
         "lss" => print_bigrams(lss_vec, skipgrams, "LSS".to_string()),
         "fsb" => print_bigrams(fsb_vec, bigrams, "FSB".to_string()),
@@ -598,7 +598,7 @@ fn main() {
         "weak" => print_trigrams(weak_vec, trigrams, "Weak".to_string()),
         "thumb" => print_trigrams(thumb_vec, trigrams, "Thumb".to_string()),
         "bigrams" => print_bigrams(bigrams_vec, bigrams, "Bigrams".to_string()),
-        "skipgrams" => print_bigrams(skipgrams_vec, skipgrams, "Skipgrams".to_string()),
+        "skipgrams" => print_trigrams(skipgrams_vec, skipgrams, "Skipgrams".to_string()),
         "trigrams" => print_trigrams(trigrams_vec, trigrams, "Trigrams".to_string()),
         _ => println!("invalid command")
     }
