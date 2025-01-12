@@ -1,4 +1,6 @@
 use std::{collections::HashMap, fs};
+use tabled::{settings::Style, builder::Builder};
+use clap::Parser;
 
 #[derive(PartialEq)]
 struct Key {
@@ -30,27 +32,41 @@ enum Finger {
     Pinky,
 }
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value = "whirl")]
+    layout: String,
+
+    #[arg(short, long, default_value = "mr")]
+    corpus: String,
+
+    #[arg(default_value = "analyze")]
+    command: String,
+}
+
 const INCLUDE_THUMB_ALT: bool = true;
 const INCLUDE_THUMB_ROLL: bool = true;
 const INCLUDE_SPACE: bool = true;
-const LAYOUT_NAME: &str = "whirl";
-const CORPUS_RAW: &str = "mr";
 
 fn main() {
-    let layout_letters: Vec<char> = fs::read_to_string(LAYOUT_NAME.to_owned() + ".txt")
+    let args = Args::parse();
+
+    let layout_letters: Vec<char> = fs::read_to_string(args.layout + ".txt")
         .expect("couldn't read layout")
         .replace(" ", "")
+        .replace("_", "⎵")
         .replace("\n", "")
         .chars()
         .collect();
 
     let layout_raw: [char; 32] = layout_letters.try_into().expect("invalid layout");
 
-    let corpus = fs::read_to_string(CORPUS_RAW.to_owned() + ".txt")
+    let corpus = fs::read_to_string(args.corpus + ".txt")
         .expect("error reading corpus")
         .to_lowercase()
-        .replace("\n", "_")
-        .replace(" ", "_")
+        .replace("\n", "⎵")
+        .replace(" ", "⎵")
         .chars()
         .filter(|ch| layout_raw.contains(ch))
         .collect::<String>();
@@ -353,7 +369,7 @@ fn main() {
         ),
     ]);
 
-    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
+    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
     let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut bigrams, mut skipgrams, mut trigrams] =
         [0; 9];
     let mut sfb_table: HashMap<[char; 2], u32> = HashMap::new();
@@ -373,7 +389,7 @@ fn main() {
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
 
-        if previous_letter != '_' && letter != '_' {
+        if previous_letter != '⎵' && letter != '⎵' {
             bigrams += 1;
             *bigrams_table.entry([previous_letter, letter]).or_insert(0) += 1;
             if sf(key, previous_key) {
@@ -389,7 +405,7 @@ fn main() {
                 *fsb_table.entry([previous_letter, letter]).or_insert(0) += 1;
             }
         }
-        if skip_previous_letter != '_' && letter != '_' {
+        if skip_previous_letter != '⎵' && letter != '⎵' {
             skipgrams += 1;
             *skipgrams_table
                 .entry([skip_previous_letter, letter])
@@ -408,7 +424,7 @@ fn main() {
             }
         }
 
-        if INCLUDE_SPACE || (skip_previous_letter != '_' && previous_letter != '_' && letter != '_')
+        if INCLUDE_SPACE || (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵')
         {
             trigrams += 1;
             *trigrams_table
@@ -418,6 +434,10 @@ fn main() {
                 .entry(trigram_stat(skip_previous_key, previous_key, key))
                 .or_default()
                 .0 += 1;
+            trigrams_mega_table
+                .entry(trigram_stat(skip_previous_key, previous_key, key))
+                .or_default()
+                .1 = trigrams_table.clone()
         }
         if key.hand == epic_previous_key.hand {
             skipgrams += 1;
@@ -448,41 +468,39 @@ fn main() {
     if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
         trigrams -= trigrams_mega_table.entry(Trigram::ThumbStat).or_default().0;
     }
-    let sfbpercent = sfb as f64 * 100.0 / bigrams as f64;
-    let sfspercent = sfs as f64 * 100.0 / skipgrams as f64;
-    let lsbpercent = lsb as f64 * 100.0 / bigrams as f64;
-    let lsspercent = lss as f64 * 100.0 / skipgrams as f64;
-    let fsbpercent = fsb as f64 * 100.0 / bigrams as f64;
-    let fsspercent = fss as f64 * 100.0 / skipgrams as f64;
+    let sfbpercent = sfb as f32 * 100.0 / bigrams as f32;
+    let sfspercent = sfs as f32 * 100.0 / skipgrams as f32;
+    let lsbpercent = lsb as f32 * 100.0 / bigrams as f32;
+    let lsspercent = lss as f32 * 100.0 / skipgrams as f32;
+    let fsbpercent = fsb as f32 * 100.0 / bigrams as f32;
+    let fsspercent = fss as f32 * 100.0 / skipgrams as f32;
     let altpercent =
-        trigrams_mega_table.entry(Trigram::Alt).or_default().0 as f64 * 100.0 / trigrams as f64;
+        trigrams_mega_table.entry(Trigram::Alt).or_default().0 as f32 * 100.0 / trigrams as f32;
     let inrollpercent =
-        trigrams_mega_table.entry(Trigram::Inroll).or_default().0 as f64 * 100.0 / trigrams as f64;
+        trigrams_mega_table.entry(Trigram::Inroll).or_default().0 as f32 * 100.0 / trigrams as f32;
     let outrollpercent =
-        trigrams_mega_table.entry(Trigram::Outroll).or_default().0 as f64 * 100.0 / trigrams as f64;
+        trigrams_mega_table.entry(Trigram::Outroll).or_default().0 as f32 * 100.0 / trigrams as f32;
     let inthreerollpercent = trigrams_mega_table
         .entry(Trigram::InThreeRoll)
         .or_default()
-        .0 as f64
+        .0 as f32
         * 100.0
-        / trigrams as f64;
+        / trigrams as f32;
     let outthreerollpercent = trigrams_mega_table
         .entry(Trigram::OutThreeRoll)
         .or_default()
-        .0 as f64
+        .0 as f32
         * 100.0
-        / trigrams as f64;
+        / trigrams as f32;
     let weakredpercent =
-        trigrams_mega_table.entry(Trigram::WeakRed).or_default().0 as f64 * 100.0 / trigrams as f64;
+        trigrams_mega_table.entry(Trigram::WeakRed).or_default().0 as f32 * 100.0 / trigrams as f32;
     let redpercent =
-        trigrams_mega_table.entry(Trigram::Red).or_default().0 as f64 * 100.0 / trigrams as f64;
+        trigrams_mega_table.entry(Trigram::Red).or_default().0 as f32 * 100.0 / trigrams as f32;
     let trigramsfpercent =
-        trigrams_mega_table.entry(Trigram::SF).or_default().0 as f64 * 100.0 / trigrams as f64;
-    let thumbstatpercent = trigrams_mega_table.entry(Trigram::ThumbStat).or_default().0 as f64
+        trigrams_mega_table.entry(Trigram::SF).or_default().0 as f32 * 100.0 / trigrams as f32;
+    let thumbstatpercent = trigrams_mega_table.entry(Trigram::ThumbStat).or_default().0 as f32
         * 100.0
-        / trigrams as f64;
-
-    println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nSF%: {}\nThumb Stat%: {}\n", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, trigramsfpercent, thumbstatpercent);
+        / trigrams as f32;
 
     let mut sfb_vec: Vec<([char; 2], u32)> = sfb_table.into_iter().collect();
     let mut sfs_vec: Vec<([char; 2], u32)> = sfs_table.into_iter().collect();
@@ -562,6 +580,28 @@ fn main() {
     bigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
     skipgrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
     trigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+    match args.command.as_str() {
+        "analyze" => println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nSF%: {}\nThumb Stat%: {}\n", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, trigramsfpercent, thumbstatpercent),
+        "sfb" => print_bigrams(sfb_vec, bigrams, "SFB".to_string()),
+        "sfs" => print_bigrams(sfs_vec, skipgrams, "SFS".to_string()),
+        "lsbs" => print_bigrams(lsb_vec, bigrams, "LSB".to_string()),
+        "lss" => print_bigrams(lss_vec, skipgrams, "LSS".to_string()),
+        "fsb" => print_bigrams(fsb_vec, bigrams, "FSB".to_string()),
+        "fss" => print_bigrams(fss_vec, skipgrams, "FSS".to_string()),
+        "alt" => print_trigrams(alt_vec, trigrams, "Alt".to_string()),
+        "inroll" => print_trigrams(inroll_vec, trigrams, "Inroll".to_string()),
+        "outroll" => print_trigrams(outroll_vec, trigrams, "Outroll".to_string()),
+        "inthreeroll" => print_trigrams(inthreeroll_vec, trigrams, "Inthreeroll".to_string()),
+        "outthreeroll" => print_trigrams(outthreeroll_vec, trigrams, "Outthreeroll".to_string()),
+        "red" => print_trigrams(red_vec, trigrams, "Red".to_string()),
+        "weak" => print_trigrams(weak_vec, trigrams, "Weak".to_string()),
+        "thumb" => print_trigrams(thumb_vec, trigrams, "Thumb".to_string()),
+        "bigrams" => print_bigrams(bigrams_vec, bigrams, "Bigrams".to_string()),
+        "skipgrams" => print_bigrams(skipgrams_vec, skipgrams, "Skipgrams".to_string()),
+        "trigrams" => print_trigrams(trigrams_vec, trigrams, "Trigrams".to_string()),
+        _ => println!("invalid command")
+    }
 }
 
 fn sf(key1: &Key, key2: &Key) -> bool {
@@ -659,4 +699,30 @@ fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
         return Trigram::WeakRed;
     }
     Trigram::Red
+}
+
+fn print_trigrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
+    let min_range = 0;
+    let max_range = 10;
+    let mut builder = Builder::default();
+    builder.push_record([title, "Frequency".to_string()]);
+    for line in vec.iter().take(max_range).skip(min_range) { 
+        builder.push_record([line.0.iter().collect(), (line.1 as f32 / ngrams as f32 * 100.0).to_string()]);
+    }
+    let mut table = builder.build();
+    table.with(Style::sharp());
+    println!("{}", table);
+}
+
+fn print_bigrams(vec: Vec<([char; 2], u32)>, ngrams: u32, title: String) {
+    let min_range = 0;
+    let max_range = 10;
+    let mut builder = Builder::default();
+    builder.push_record([title, "Frequency".to_string()]);
+    for line in vec.iter().take(max_range).skip(min_range) { 
+        builder.push_record([line.0.iter().collect(), (line.1 as f32 / ngrams as f32 * 100.0).to_string()]);
+    }
+    let mut table = builder.build();
+    table.with(Style::sharp());
+    println!("{}", table);
 }
