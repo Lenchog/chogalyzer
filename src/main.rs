@@ -370,18 +370,8 @@ fn main() {
     ]);
 
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
-    let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut bigrams, mut skipgrams, mut trigrams] =
-        [0; 9];
-    let mut sfb_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut sfs_table: HashMap<[char; 3], u32> = HashMap::new();
-    let mut lsb_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut lss_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut fsb_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut fss_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut bigrams_table: HashMap<[char; 2], u32> = HashMap::new();
-    let mut skipgrams_table: HashMap<[char; 3], u32> = HashMap::new();
-    let mut trigrams_table: HashMap<[char; 3], u32> = HashMap::new();
-    let mut trigrams_mega_table: HashMap<Trigram, (u32, HashMap<[char; 3], u32>)> = HashMap::new();
+    let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut alt, mut inroll, mut outroll, mut inthreeroll, mut outthreeroll, mut red, mut weak_red, mut thumb_stat, mut trigram_sf, mut bigrams, mut skipgrams, mut trigrams] = [0; 18];
+    let mut ngram_table: HashMap<[char; 3], u32> = HashMap::new();
 
     for letter in corpus.chars() {
         let key = &layout[&letter];
@@ -391,53 +381,51 @@ fn main() {
 
         if previous_letter != '⎵' && letter != '⎵' {
             bigrams += 1;
-            *bigrams_table.entry([previous_letter, letter]).or_insert(0) += 1;
             if sf(key, previous_key) {
                 sfb += 1;
-                *sfb_table.entry([previous_letter, letter]).or_insert(0) += 1;
+                if args.command == "sfb" {
+                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
+                }
             }
             if ls(key, previous_key) {
                 lsb += 1;
-                *lsb_table.entry([previous_letter, letter]).or_insert(0) += 1;
+                if args.command == "lsb" {
+                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
+                }
             }
             if fs(key, previous_key) {
                 fsb += 1;
-                *fsb_table.entry([previous_letter, letter]).or_insert(0) += 1;
+                if args.command == "fsb" {
+                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
+                }
             }
         }
         if skip_previous_letter != '⎵' && letter != '⎵' {
             skipgrams += 1;
-            *skipgrams_table
-                .entry([skip_previous_letter, '_', letter])
-                .or_insert(0) += 1;
             if sf(key, skip_previous_key) {
                 sfs += 1;
-                *sfs_table.entry([skip_previous_letter, '_', letter]).or_insert(0) += 1;
+                if args.command == "sfs" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
             }
             if ls(key, skip_previous_key) {
                 lss += 1;
-                *lss_table.entry([skip_previous_letter, letter]).or_insert(0) += 1;
+                if args.command == "lss" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
             }
             if fs(key, skip_previous_key) {
                 fss += 1;
-                *fss_table.entry([skip_previous_letter, letter]).or_insert(0) += 1;
+                if args.command == "fss" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
             }
         }
 
         if INCLUDE_SPACE || (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵')
         {
             trigrams += 1;
-            *trigrams_table
-                .entry([skip_previous_letter, previous_letter, letter])
-                .or_insert(0) += 1;
-            trigrams_mega_table
-                .entry(trigram_stat(skip_previous_key, previous_key, key))
-                .or_default()
-                .0 += 1;
-            trigrams_mega_table
-                .entry(trigram_stat(skip_previous_key, previous_key, key))
-                .or_default()
-                .1 = trigrams_table.clone()
+            //TODO *ngram_table .entry([skip_previous_letter, previous_letter, letter]) .or_insert(0) += 1;
         }
         if key.hand == epic_previous_key.hand {
             skipgrams += 1;
@@ -445,19 +433,81 @@ fn main() {
                 && epic_previous_letter != skip_previous_letter
                 && epic_previous_letter != previous_letter
             {
-                sfs += 1
+                sfs += 1;
+                if args.command == "sfs" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
             }
             if ls(key, epic_previous_key)
                 && epic_previous_letter != skip_previous_letter
                 && epic_previous_letter != previous_letter
             {
-                lss += 1
+                lss += 1;
+                if args.command == "lss" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
             }
             if fs(key, epic_previous_key)
                 && epic_previous_letter != skip_previous_letter
                 && epic_previous_letter != previous_letter
             {
-                fss += 1
+                fss += 1;
+                if args.command == "fss" {
+                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
+                }
+            }
+        } 
+        match trigram_stat(skip_previous_key, previous_key, key) {
+            Trigram::Inroll => {
+                inroll += 1;
+                if args.command == "inroll" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::Outroll => {
+                outroll += 1;
+                if args.command == "outroll" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::Alt => {
+                alt += 1;
+                if args.command == "alt" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::InThreeRoll => {
+                inthreeroll += 1;
+                if args.command == "inthreeroll" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::OutThreeRoll => {
+                outthreeroll += 1;
+                if args.command == "outthreeroll" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::Red => {
+                red += 1;
+                if args.command == "red" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::WeakRed => {
+                weak_red += 1;
+                if args.command == "weak_red" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::ThumbStat => {
+                thumb_stat += 1;
+                if args.command == "thumb_stat" {
+                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
+                }
+            }
+            Trigram::SF => {
+                trigram_sf += 1;
             }
         }
         epic_previous_letter = letter;
@@ -466,7 +516,7 @@ fn main() {
     }
 
     if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
-        trigrams -= trigrams_mega_table.entry(Trigram::ThumbStat).or_default().0;
+        trigrams -= thumb_stat;
     }
     let sfbpercent = sfb as f32 * 100.0 / bigrams as f32;
     let sfspercent = sfs as f32 * 100.0 / skipgrams as f32;
@@ -474,132 +524,41 @@ fn main() {
     let lsspercent = lss as f32 * 100.0 / skipgrams as f32;
     let fsbpercent = fsb as f32 * 100.0 / bigrams as f32;
     let fsspercent = fss as f32 * 100.0 / skipgrams as f32;
-    let altpercent =
-        trigrams_mega_table.entry(Trigram::Alt).or_default().0 as f32 * 100.0 / trigrams as f32;
-    let inrollpercent =
-        trigrams_mega_table.entry(Trigram::Inroll).or_default().0 as f32 * 100.0 / trigrams as f32;
-    let outrollpercent =
-        trigrams_mega_table.entry(Trigram::Outroll).or_default().0 as f32 * 100.0 / trigrams as f32;
-    let inthreerollpercent = trigrams_mega_table
-        .entry(Trigram::InThreeRoll)
-        .or_default()
-        .0 as f32
-        * 100.0
-        / trigrams as f32;
-    let outthreerollpercent = trigrams_mega_table
-        .entry(Trigram::OutThreeRoll)
-        .or_default()
-        .0 as f32
-        * 100.0
-        / trigrams as f32;
-    let weakredpercent =
-        trigrams_mega_table.entry(Trigram::WeakRed).or_default().0 as f32 * 100.0 / trigrams as f32;
+    let altpercent = alt as f32 * 100.0 / trigrams as f32;
+    let inrollpercent = inroll as f32 * 100.0 / trigrams as f32;
+    let outrollpercent = outroll as f32 * 100.0 / trigrams as f32;
+    let inthreerollpercent = inthreeroll as f32 * 100.0 / trigrams as f32;
+    let outthreerollpercent = outthreeroll as f32 * 100.0 / trigrams as f32;
+    let weakredpercent = weak_red as f32 * 100.0 / trigrams as f32;
     let redpercent =
-        trigrams_mega_table.entry(Trigram::Red).or_default().0 as f32 * 100.0 / trigrams as f32;
+        red as f32 * 100.0 / trigrams as f32;
     let trigramsfpercent =
-        trigrams_mega_table.entry(Trigram::SF).or_default().0 as f32 * 100.0 / trigrams as f32;
-    let thumbstatpercent = trigrams_mega_table.entry(Trigram::ThumbStat).or_default().0 as f32
-        * 100.0
-        / trigrams as f32;
+        trigrams as f32 * 100.0 / trigrams as f32;
+    let thumbstatpercent = thumb_stat as f32 * 100.0 / trigrams as f32;
 
-    let mut sfb_vec: Vec<([char; 2], u32)> = sfb_table.into_iter().collect();
-    let mut sfs_vec: Vec<([char; 3], u32)> = sfs_table.into_iter().collect();
-    let mut lsb_vec: Vec<([char; 2], u32)> = lsb_table.into_iter().collect();
-    let mut lss_vec: Vec<([char; 2], u32)> = lss_table.into_iter().collect();
-    let mut fsb_vec: Vec<([char; 2], u32)> = fsb_table.into_iter().collect();
-    let mut fss_vec: Vec<([char; 2], u32)> = fss_table.into_iter().collect();
+    let mut ngram_vec: Vec<([char; 3], u32)> = ngram_table.into_iter().collect();
 
-    let mut alt_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::Alt)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut inroll_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::Inroll)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut outroll_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::Outroll)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut inthreeroll_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::InThreeRoll)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut outthreeroll_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::OutThreeRoll)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut red_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::Red)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut weak_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::WeakRed)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-    let mut thumb_vec: Vec<([char; 3], u32)> = trigrams_mega_table
-        .remove(&Trigram::ThumbStat)
-        .unwrap_or_default()
-        .1
-        .into_iter()
-        .collect();
-
-    let mut trigrams_vec: Vec<([char; 3], u32)> = trigrams_table.into_iter().collect();
-    let mut bigrams_vec: Vec<([char; 2], u32)> = bigrams_table.into_iter().collect();
-    let mut skipgrams_vec: Vec<([char; 3], u32)> = skipgrams_table.into_iter().collect();
-
-    sfb_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    sfs_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    lsb_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    lss_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    fsb_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    fss_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    alt_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    inroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    outroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    inthreeroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    outthreeroll_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    red_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    weak_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    thumb_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    thumb_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    bigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    skipgrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
-    trigrams_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     match args.command.as_str() {
         "analyze" => println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nSF%: {}\nThumb Stat%: {}\n", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, trigramsfpercent, thumbstatpercent),
-        "sfb" => print_bigrams(sfb_vec, bigrams, "SFB".to_string()),
-        "sfs" => print_trigrams(sfs_vec, skipgrams, "SFS".to_string()),
-        "lsbs" => print_bigrams(lsb_vec, bigrams, "LSB".to_string()),
-        "lss" => print_bigrams(lss_vec, skipgrams, "LSS".to_string()),
-        "fsb" => print_bigrams(fsb_vec, bigrams, "FSB".to_string()),
-        "fss" => print_bigrams(fss_vec, skipgrams, "FSS".to_string()),
-        "alt" => print_trigrams(alt_vec, trigrams, "Alt".to_string()),
-        "inroll" => print_trigrams(inroll_vec, trigrams, "Inroll".to_string()),
-        "outroll" => print_trigrams(outroll_vec, trigrams, "Outroll".to_string()),
-        "inthreeroll" => print_trigrams(inthreeroll_vec, trigrams, "Inthreeroll".to_string()),
-        "outthreeroll" => print_trigrams(outthreeroll_vec, trigrams, "Outthreeroll".to_string()),
-        "red" => print_trigrams(red_vec, trigrams, "Red".to_string()),
-        "weak" => print_trigrams(weak_vec, trigrams, "Weak".to_string()),
-        "thumb" => print_trigrams(thumb_vec, trigrams, "Thumb".to_string()),
-        "bigrams" => print_bigrams(bigrams_vec, bigrams, "Bigrams".to_string()),
-        "skipgrams" => print_trigrams(skipgrams_vec, skipgrams, "Skipgrams".to_string()),
-        "trigrams" => print_trigrams(trigrams_vec, trigrams, "Trigrams".to_string()),
+        "sfb" => print_ngrams(ngram_vec, bigrams, "SFB".to_string()),
+        "sfs" => print_ngrams(ngram_vec, skipgrams, "SFS".to_string()),
+        "lsbs" => print_ngrams(ngram_vec, bigrams, "LSB".to_string()),
+        "lss" => print_ngrams(ngram_vec, skipgrams, "LSS".to_string()),
+        "fsb" => print_ngrams(ngram_vec, bigrams, "FSB".to_string()),
+        "fss" => print_ngrams(ngram_vec, skipgrams, "FSS".to_string()),
+        "alt" => print_ngrams(ngram_vec, trigrams, "Alt".to_string()),
+        "inroll" => print_ngrams(ngram_vec, trigrams, "Inroll".to_string()),
+        "outroll" => print_ngrams(ngram_vec, trigrams, "Outroll".to_string()),
+        "inthreeroll" => print_ngrams(ngram_vec, trigrams, "Inthreeroll".to_string()),
+        "outthreeroll" => print_ngrams(ngram_vec, trigrams, "Outthreeroll".to_string()),
+        "red" => print_ngrams(ngram_vec, trigrams, "Red".to_string()),
+        "weak" => print_ngrams(ngram_vec, trigrams, "Weak".to_string()),
+        "thumb" => print_ngrams(ngram_vec, trigrams, "Thumb".to_string()),
+        "bigrams" => print_ngrams(ngram_vec, bigrams, "Bigrams".to_string()),
+        "skipgrams" => print_ngrams(ngram_vec, skipgrams, "Skipgrams".to_string()),
+        "trigrams" => print_ngrams(ngram_vec, trigrams, "Trigrams".to_string()),
         _ => println!("invalid command")
     }
 }
@@ -701,7 +660,7 @@ fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     Trigram::Red
 }
 
-fn print_trigrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
+fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     let min_range = 0;
     let max_range = 10;
     let mut builder = Builder::default();
@@ -714,15 +673,3 @@ fn print_trigrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     println!("{}", table);
 }
 
-fn print_bigrams(vec: Vec<([char; 2], u32)>, ngrams: u32, title: String) {
-    let min_range = 0;
-    let max_range = 10;
-    let mut builder = Builder::default();
-    builder.push_record([title, "Frequency".to_string()]);
-    for line in vec.iter().take(max_range).skip(min_range) { 
-        builder.push_record([line.0.iter().collect(), (line.1 as f32 / ngrams as f32 * 100.0).to_string()]);
-    }
-    let mut table = builder.build();
-    table.with(Style::sharp());
-    println!("{}", table);
-}
