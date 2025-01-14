@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fs};
-use tabled::{settings::Style, builder::Builder};
 use clap::Parser;
+use std::{collections::HashMap, fs};
+use tabled::{builder::Builder, settings::Style};
 
 #[derive(PartialEq)]
 struct Key {
@@ -32,8 +32,30 @@ enum Finger {
     Pinky,
 }
 
+#[derive(Default, Debug)]
+struct Stats {
+    sfb: u32,
+    sfs: u32,
+    lsb: u32,
+    lss: u32,
+    fsb: u32,
+    fss: u32,
+    inroll: u32,
+    outroll: u32,
+    alt: u32,
+    inthreeroll: u32,
+    outthreeroll: u32,
+    weak_red: u32,
+    red: u32,
+    thumb_stat: u32,
+    bigrams: u32,
+    skipgrams: u32,
+    trigrams: u32,
+    ngram_table: HashMap<[char; 3], u32>,
+}
+
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+
 struct Args {
     #[arg(short, long, default_value = "whirl")]
     layout: String,
@@ -71,495 +93,74 @@ fn main() {
         .filter(|ch| layout_raw.contains(ch))
         .collect::<String>();
 
+    #[rustfmt::skip]
     let layout = HashMap::from([
         // LH top row
-        (
-            layout_raw[0],
-            Key {
-                hand: 0,
-                finger: Finger::Pinky,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[1],
-            Key {
-                hand: 0,
-                finger: Finger::Ring,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[2],
-            Key {
-                hand: 0,
-                finger: Finger::Middle,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[3],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[4],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 0,
-                lateral: true,
-            },
-        ),
+        ( layout_raw[0], Key { hand: 0, finger: Finger::Pinky, row: 0, lateral: false, },),
+        ( layout_raw[1], Key { hand: 0, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[2], Key { hand: 0, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[3], Key { hand: 0, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[4], Key { hand: 0, finger: Finger::Index, row: 0, lateral: true, },),
         // RH top row
-        (
-            layout_raw[5],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 0,
-                lateral: true,
-            },
-        ),
-        (
-            layout_raw[6],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[7],
-            Key {
-                hand: 1,
-                finger: Finger::Middle,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[8],
-            Key {
-                hand: 1,
-                finger: Finger::Ring,
-                row: 0,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[9],
-            Key {
-                hand: 1,
-                finger: Finger::Pinky,
-                row: 0,
-                lateral: false,
-            },
-        ),
+        ( layout_raw[5], Key { hand: 1, finger: Finger::Index, row: 0, lateral: true, },),
+        ( layout_raw[6], Key { hand: 1, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[7], Key { hand: 1, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[8], Key { hand: 1, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[9], Key { hand: 1, finger: Finger::Pinky, row: 0, lateral: false, },),
         // LH middle row
-        (
-            layout_raw[10],
-            Key {
-                hand: 0,
-                finger: Finger::Pinky,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[11],
-            Key {
-                hand: 0,
-                finger: Finger::Ring,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[12],
-            Key {
-                hand: 0,
-                finger: Finger::Middle,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[13],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[14],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 1,
-                lateral: true,
-            },
-        ),
+        ( layout_raw[10], Key { hand: 0, finger: Finger::Pinky, row: 1, lateral: false, },),
+        ( layout_raw[11], Key { hand: 0, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[12], Key { hand: 0, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[13], Key { hand: 0, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[14], Key { hand: 0, finger: Finger::Index, row: 1, lateral: true, },),
         // RH middle row
-        (
-            layout_raw[15],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 1,
-                lateral: true,
-            },
-        ),
-        (
-            layout_raw[16],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[17],
-            Key {
-                hand: 1,
-                finger: Finger::Middle,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[18],
-            Key {
-                hand: 1,
-                finger: Finger::Ring,
-                row: 1,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[19],
-            Key {
-                hand: 1,
-                finger: Finger::Pinky,
-                row: 1,
-                lateral: false,
-            },
-        ),
+        ( layout_raw[15], Key { hand: 1, finger: Finger::Index, row: 1, lateral: true, },),
+        ( layout_raw[16], Key { hand: 1, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[17], Key { hand: 1, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[18], Key { hand: 1, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[19], Key { hand: 1, finger: Finger::Pinky, row: 1, lateral: false, },),
         // LH bottom row
-        (
-            layout_raw[20],
-            Key {
-                hand: 0,
-                finger: Finger::Pinky,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[21],
-            Key {
-                hand: 0,
-                finger: Finger::Ring,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[22],
-            Key {
-                hand: 0,
-                finger: Finger::Middle,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[23],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[24],
-            Key {
-                hand: 0,
-                finger: Finger::Index,
-                row: 2,
-                lateral: true,
-            },
-        ),
+        ( layout_raw[20], Key { hand: 0, finger: Finger::Pinky, row: 2, lateral: false, },),
+        ( layout_raw[21], Key { hand: 0, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[22], Key { hand: 0, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[23], Key { hand: 0, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[24], Key { hand: 0, finger: Finger::Index, row: 2, lateral: true, },),
         // RH bottom row
-        (
-            layout_raw[25],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 2,
-                lateral: true,
-            },
-        ),
-        (
-            layout_raw[26],
-            Key {
-                hand: 1,
-                finger: Finger::Index,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[27],
-            Key {
-                hand: 1,
-                finger: Finger::Middle,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[28],
-            Key {
-                hand: 1,
-                finger: Finger::Ring,
-                row: 2,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[29],
-            Key {
-                hand: 1,
-                finger: Finger::Pinky,
-                row: 2,
-                lateral: false,
-            },
-        ),
+        ( layout_raw[25], Key { hand: 1, finger: Finger::Index, row: 2, lateral: true, },),
+        ( layout_raw[26], Key { hand: 1, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[27], Key { hand: 1, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[28], Key { hand: 1, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[29], Key { hand: 1, finger: Finger::Pinky, row: 2, lateral: false, },),
         // Thumb keys
-        (
-            layout_raw[30],
-            Key {
-                hand: 0,
-                finger: Finger::Thumb,
-                row: 3,
-                lateral: false,
-            },
-        ),
-        (
-            layout_raw[31],
-            Key {
-                hand: 1,
-                finger: Finger::Thumb,
-                row: 3,
-                lateral: false,
-            },
-        ),
+        ( layout_raw[30], Key { hand: 0, finger: Finger::Thumb, row: 3, lateral: false, },),
+        ( layout_raw[31], Key { hand: 1, finger: Finger::Thumb, row: 3, lateral: false, },),
     ]);
 
-    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
-    let [mut sfb, mut sfs, mut lsb, mut lss, mut fsb, mut fss, mut alt, mut inroll, mut outroll, mut inthreeroll, mut outthreeroll, mut red, mut weak_red, mut thumb_stat, mut trigram_sf, mut bigrams, mut skipgrams, mut trigrams] = [0; 18];
-    let mut ngram_table: HashMap<[char; 3], u32> = HashMap::new();
+    let stats = analyze(corpus, layout, &args.command);
 
-    for letter in corpus.chars() {
-        let key = &layout[&letter];
-        let previous_key = &layout[&previous_letter];
-        let skip_previous_key = &layout[&skip_previous_letter];
-        let epic_previous_key = &layout[&epic_previous_letter];
-
-        if previous_letter != '⎵' && letter != '⎵' {
-            bigrams += 1;
-            if sf(key, previous_key) {
-                sfb += 1;
-                if args.command == "sfb" {
-                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
-                }
-            }
-            if ls(key, previous_key) {
-                lsb += 1;
-                if args.command == "lsb" {
-                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
-                }
-            }
-            if fs(key, previous_key) {
-                fsb += 1;
-                if args.command == "fsb" {
-                    *ngram_table.entry([previous_letter, letter, ' ']).or_insert(0) += 1;
-                }
-            }
-        }
-        if skip_previous_letter != '⎵' && letter != '⎵' {
-            skipgrams += 1;
-            if sf(key, skip_previous_key) {
-                sfs += 1;
-                if args.command == "sfs" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-            if ls(key, skip_previous_key) {
-                lss += 1;
-                if args.command == "lss" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-            if fs(key, skip_previous_key) {
-                fss += 1;
-                if args.command == "fss" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-        }
-
-        if INCLUDE_SPACE || (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵')
-        {
-            trigrams += 1;
-            //TODO *ngram_table .entry([skip_previous_letter, previous_letter, letter]) .or_insert(0) += 1;
-        }
-        if key.hand == epic_previous_key.hand {
-            skipgrams += 1;
-            if sf(key, epic_previous_key)
-                && epic_previous_letter != skip_previous_letter
-                && epic_previous_letter != previous_letter
-            {
-                sfs += 1;
-                if args.command == "sfs" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-            if ls(key, epic_previous_key)
-                && epic_previous_letter != skip_previous_letter
-                && epic_previous_letter != previous_letter
-            {
-                lss += 1;
-                if args.command == "lss" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-            if fs(key, epic_previous_key)
-                && epic_previous_letter != skip_previous_letter
-                && epic_previous_letter != previous_letter
-            {
-                fss += 1;
-                if args.command == "fss" {
-                    *ngram_table.entry([previous_letter, '_', letter]).or_insert(0) += 1;
-                }
-            }
-        } 
-        match trigram_stat(skip_previous_key, previous_key, key) {
-            Trigram::Inroll => {
-                inroll += 1;
-                if args.command == "inroll" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::Outroll => {
-                outroll += 1;
-                if args.command == "outroll" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::Alt => {
-                alt += 1;
-                if args.command == "alt" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::InThreeRoll => {
-                inthreeroll += 1;
-                if args.command == "inthreeroll" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::OutThreeRoll => {
-                outthreeroll += 1;
-                if args.command == "outthreeroll" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::Red => {
-                red += 1;
-                if args.command == "red" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::WeakRed => {
-                weak_red += 1;
-                if args.command == "weak_red" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::ThumbStat => {
-                thumb_stat += 1;
-                if args.command == "thumb_stat" {
-                    *ngram_table.entry([skip_previous_letter, previous_letter, letter]).or_insert(0) += 1;
-                }
-            }
-            Trigram::SF => {
-                trigram_sf += 1;
-            }
-        }
-        epic_previous_letter = letter;
-        skip_previous_letter = previous_letter;
-        previous_letter = letter;
-    }
-
-    if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
-        trigrams -= thumb_stat;
-    }
-    let sfbpercent = sfb as f32 * 100.0 / bigrams as f32;
-    let sfspercent = sfs as f32 * 100.0 / skipgrams as f32;
-    let lsbpercent = lsb as f32 * 100.0 / bigrams as f32;
-    let lsspercent = lss as f32 * 100.0 / skipgrams as f32;
-    let fsbpercent = fsb as f32 * 100.0 / bigrams as f32;
-    let fsspercent = fss as f32 * 100.0 / skipgrams as f32;
-    let altpercent = alt as f32 * 100.0 / trigrams as f32;
-    let inrollpercent = inroll as f32 * 100.0 / trigrams as f32;
-    let outrollpercent = outroll as f32 * 100.0 / trigrams as f32;
-    let inthreerollpercent = inthreeroll as f32 * 100.0 / trigrams as f32;
-    let outthreerollpercent = outthreeroll as f32 * 100.0 / trigrams as f32;
-    let weakredpercent = weak_red as f32 * 100.0 / trigrams as f32;
-    let redpercent =
-        red as f32 * 100.0 / trigrams as f32;
-    let trigramsfpercent =
-        trigrams as f32 * 100.0 / trigrams as f32;
-    let thumbstatpercent = thumb_stat as f32 * 100.0 / trigrams as f32;
-
-    let mut ngram_vec: Vec<([char; 3], u32)> = ngram_table.into_iter().collect();
-
+    let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     match args.command.as_str() {
-        "analyze" => println!("SFB%: {}\nSFS%: {}\nLSB%: {}\nLSS%: {}\nFSB%: {}\nFSS%: {}\nAlt%: {}\nInroll%: {}\nOutroll%: {}\nIn3Roll%: {}\nOut3Roll%: {}\nWeak Red%: {}\nRed%: {}\nSF%: {}\nThumb Stat%: {}\n", sfbpercent, sfspercent, lsbpercent, lsspercent, fsbpercent, fsspercent, altpercent, inrollpercent, outrollpercent, inthreerollpercent, outthreerollpercent, weakredpercent, redpercent, trigramsfpercent, thumbstatpercent),
-        "sfb" => print_ngrams(ngram_vec, bigrams, "SFB".to_string()),
-        "sfs" => print_ngrams(ngram_vec, skipgrams, "SFS".to_string()),
-        "lsbs" => print_ngrams(ngram_vec, bigrams, "LSB".to_string()),
-        "lss" => print_ngrams(ngram_vec, skipgrams, "LSS".to_string()),
-        "fsb" => print_ngrams(ngram_vec, bigrams, "FSB".to_string()),
-        "fss" => print_ngrams(ngram_vec, skipgrams, "FSS".to_string()),
-        "alt" => print_ngrams(ngram_vec, trigrams, "Alt".to_string()),
-        "inroll" => print_ngrams(ngram_vec, trigrams, "Inroll".to_string()),
-        "outroll" => print_ngrams(ngram_vec, trigrams, "Outroll".to_string()),
-        "inthreeroll" => print_ngrams(ngram_vec, trigrams, "Inthreeroll".to_string()),
-        "outthreeroll" => print_ngrams(ngram_vec, trigrams, "Outthreeroll".to_string()),
-        "red" => print_ngrams(ngram_vec, trigrams, "Red".to_string()),
-        "weak" => print_ngrams(ngram_vec, trigrams, "Weak".to_string()),
-        "thumb" => print_ngrams(ngram_vec, trigrams, "Thumb".to_string()),
-        "bigrams" => print_ngrams(ngram_vec, bigrams, "Bigrams".to_string()),
-        "skipgrams" => print_ngrams(ngram_vec, skipgrams, "Skipgrams".to_string()),
-        "trigrams" => print_ngrams(ngram_vec, trigrams, "Trigrams".to_string()),
-        _ => println!("invalid command")
+        "analyze" => print_stats(stats),
+        "sfb" => print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
+        "sfs" => print_ngrams(ngram_vec, stats.skipgrams, "SFS".to_string()),
+        "lsbs" => print_ngrams(ngram_vec, stats.bigrams, "LSB".to_string()),
+        "lss" => print_ngrams(ngram_vec, stats.skipgrams, "LSS".to_string()),
+        "fsb" => print_ngrams(ngram_vec, stats.bigrams, "FSB".to_string()),
+        "fss" => print_ngrams(ngram_vec, stats.skipgrams, "FSS".to_string()),
+        "alt" => print_ngrams(ngram_vec, stats.trigrams, "Alt".to_string()),
+        "inroll" => print_ngrams(ngram_vec, stats.trigrams, "Inroll".to_string()),
+        "outroll" => print_ngrams(ngram_vec, stats.trigrams, "Outroll".to_string()),
+        "inthreeroll" => print_ngrams(ngram_vec, stats.trigrams, "Inthreeroll".to_string()),
+        "outthreeroll" => print_ngrams(ngram_vec, stats.trigrams, "Outthreeroll".to_string()),
+        "red" => print_ngrams(ngram_vec, stats.trigrams, "Red".to_string()),
+        "weak" => print_ngrams(ngram_vec, stats.trigrams, "Weak".to_string()),
+        "thumb" => print_ngrams(ngram_vec, stats.trigrams, "Thumb".to_string()),
+        "bigrams" => print_ngrams(ngram_vec, stats.bigrams, "Bigrams".to_string()),
+        "skipgrams" => print_ngrams(ngram_vec, stats.skipgrams, "Skipgrams".to_string()),
+        "trigrams" => print_ngrams(ngram_vec, stats.trigrams, "Trigrams".to_string()),
+        _ => println!("invalid command"),
     }
 }
 
@@ -665,11 +266,259 @@ fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     let max_range = 10;
     let mut builder = Builder::default();
     builder.push_record([title, "Frequency".to_string()]);
-    for line in vec.iter().take(max_range).skip(min_range) { 
-        builder.push_record([line.0.iter().collect(), (line.1 as f32 / ngrams as f32 * 100.0).to_string()]);
+    for line in vec.iter().take(max_range).skip(min_range) {
+        builder.push_record([
+            line.0.iter().collect(),
+            (line.1 as f32 / ngrams as f32 * 100.0).to_string(),
+        ]);
     }
     let mut table = builder.build();
     table.with(Style::sharp());
     println!("{}", table);
 }
 
+fn bigram_stats(key1: &Key, key2: &Key, command: &String, mut stats: Stats) -> (Stats, bool) {
+    let mut insert_ngram = false;
+    stats.bigrams += 1;
+    if sf(key1, key2) {
+        stats.sfb += 1;
+        if command == "sfb" {
+            insert_ngram = true;
+        }
+    }
+    if ls(key1, key2) {
+        stats.lsb += 1;
+        if command == "lsb" {
+            insert_ngram = true;
+        }
+    }
+    if fs(key1, key2) {
+        stats.fsb += 1;
+        if command == "fsb" {
+            insert_ngram = true;
+        }
+    }
+    (stats, insert_ngram)
+}
+
+fn skipgram_stats(
+    key1: &Key,
+    key2: &Key,
+    epic_key1: &Key,
+    command: &String,
+    mut stats: Stats,
+) -> (Stats, bool) {
+    let mut insert_ngram = false;
+    stats.skipgrams += 1;
+    if sf(key1, key2) {
+        stats.sfs += 1;
+        if command == "sfs" {
+            insert_ngram = true;
+        }
+    }
+    if ls(key1, key2) {
+        stats.lss += 1;
+        if command == "lss" {
+            insert_ngram = true;
+        }
+    }
+    if fs(key1, key2) {
+        stats.fss += 1;
+        if command == "fss" {
+            insert_ngram = true;
+        }
+    }
+
+    if epic_key1.hand == key2.hand {
+        stats.skipgrams += 1;
+        if sf(epic_key1, key2) && epic_key1 != key2 {
+            stats.sfs += 1;
+            if command == "sfs" {
+                insert_ngram = true;
+            }
+        }
+        if ls(key2, epic_key1) && epic_key1 != key2 {
+            stats.lss += 1;
+            if command == "lss" {
+                insert_ngram = true;
+            }
+        }
+        if fs(key2, epic_key1) && epic_key1 != key2 {
+            stats.fss += 1;
+            if command == "fss" {
+                insert_ngram = true;
+            }
+        }
+    }
+
+    (stats, insert_ngram)
+}
+
+fn trigram_stats(
+    key1: &Key,
+    key2: &Key,
+    key3: &Key,
+    command: &String,
+    mut stats: Stats,
+) -> (Stats, bool) {
+    let mut insert_ngram = false;
+    match trigram_stat(key1, key2, key3) {
+        Trigram::Inroll => {
+            stats.inroll += 1;
+            if command == "inroll" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::Outroll => {
+            stats.outroll += 1;
+            if command == "outroll" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::Alt => {
+            stats.alt += 1;
+            if command == "alt" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::InThreeRoll => {
+            stats.inthreeroll += 1;
+            if command == "inthreeroll" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::OutThreeRoll => {
+            stats.outthreeroll += 1;
+            if command == "outthreeroll" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::Red => {
+            stats.red += 1;
+            if command == "red" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::WeakRed => {
+            stats.weak_red += 1;
+            if command == "weak_red" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::ThumbStat => {
+            stats.thumb_stat += 1;
+            if command == "thumb_stat" {
+                insert_ngram = true;
+            }
+        }
+        Trigram::SF => {}
+    }
+    (stats, insert_ngram)
+}
+
+fn analyze(corpus: String, layout: HashMap<char, Key>, command: &String) -> Stats {
+    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
+    let mut stats: Stats = Stats::default();
+    let mut ngram_table: HashMap<[char; 3], u32> = HashMap::new();
+
+    for letter in corpus.chars() {
+        let key = &layout[&letter];
+        let previous_key = &layout[&previous_letter];
+        let skip_previous_key = &layout[&skip_previous_letter];
+        let epic_previous_key = &layout[&epic_previous_letter];
+
+        if INCLUDE_SPACE || (previous_letter != '⎵' && letter != '⎵') {
+            let bigram = bigram_stats(previous_key, key, command, stats);
+            stats = bigram.0;
+            if bigram.1 {
+                *ngram_table
+                    .entry([previous_letter, letter, ' '])
+                    .or_insert(0) += 1;
+            }
+        }
+
+        if INCLUDE_SPACE || skip_previous_letter != '⎵' && letter != '⎵' {
+            let skipgram =
+                skipgram_stats(skip_previous_key, key, epic_previous_key, command, stats);
+            stats = skipgram.0;
+            if skipgram.1 {
+                *ngram_table
+                    .entry([skip_previous_letter, letter, ' '])
+                    .or_insert(0) += 1;
+            }
+        }
+
+        if INCLUDE_SPACE || (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵')
+        {
+            let trigram = trigram_stats(skip_previous_key, previous_key, key, command, stats);
+            stats = trigram.0;
+            stats.trigrams += 1;
+            if trigram.1 {
+                *ngram_table
+                    .entry([skip_previous_letter, previous_letter, letter])
+                    .or_insert(0) += 1;
+            }
+        }
+        epic_previous_letter = letter;
+        skip_previous_letter = previous_letter;
+        previous_letter = letter;
+    }
+    if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
+        stats.trigrams -= stats.thumb_stat;
+    }
+    stats.ngram_table = ngram_table;
+    stats
+}
+
+fn print_stats(stats: Stats) {
+    let sfbpercent = stats.sfb as f32 * 100.0 / stats.bigrams as f32;
+    let sfspercent = stats.sfs as f32 * 100.0 / stats.skipgrams as f32;
+    let lsbpercent = stats.lsb as f32 * 100.0 / stats.bigrams as f32;
+    let lsspercent = stats.lss as f32 * 100.0 / stats.skipgrams as f32;
+    let fsbpercent = stats.fsb as f32 * 100.0 / stats.bigrams as f32;
+    let fsspercent = stats.fss as f32 * 100.0 / stats.skipgrams as f32;
+    let altpercent = stats.alt as f32 * 100.0 / stats.trigrams as f32;
+    let inrollpercent = stats.inroll as f32 * 100.0 / stats.trigrams as f32;
+    let outrollpercent = stats.outroll as f32 * 100.0 / stats.trigrams as f32;
+    let inthreerollpercent = stats.inthreeroll as f32 * 100.0 / stats.trigrams as f32;
+    let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.trigrams as f32;
+    let weakredpercent = stats.weak_red as f32 * 100.0 / stats.trigrams as f32;
+    let redpercent = stats.red as f32 * 100.0 / stats.trigrams as f32;
+    println!(
+        "{}",
+        format_args!(
+            concat!(
+                "SFB: {}%\n",
+                "SFS: {}%\n",
+                "LSB: {}%\n",
+                "LSS: {}%\n",
+                "FSB: {}%\n",
+                "FSS: {}%\n",
+                "Alt: {}%\n",
+                "Roll: {}%\n",
+                "  In: {}%\n",
+                "  Out: {}%\n",
+                "Threeroll: {}%\n",
+                "  In: {}%\n",
+                "  Out: {}%\n",
+                "Redirects: {}%\n",
+                "Weak Redirects: {}%\n"
+            ),
+            sfbpercent,
+            sfspercent,
+            lsbpercent,
+            lsspercent,
+            fsbpercent,
+            fsspercent,
+            altpercent,
+            inrollpercent + outrollpercent,
+            inrollpercent,
+            outrollpercent,
+            inthreerollpercent + outthreerollpercent,
+            inthreerollpercent,
+            outthreerollpercent,
+            redpercent + weakredpercent,
+            weakredpercent
+        )
+    )
+}
