@@ -47,10 +47,10 @@ pub struct Stats {
 #[derive(Parser, Debug)]
 
 struct Args {
-    #[arg(short, long, default_value = "whirl")]
+    #[arg(short, long, default_value = "whirl.txt")]
     layout: String,
 
-    #[arg(short, long, default_value = "mr")]
+    #[arg(short, long, default_value = "mr.txt")]
     corpus: String,
 
     #[arg(default_value = "analyze")]
@@ -64,24 +64,33 @@ const INCLUDE_SPACE: bool = true;
 fn main() {
     let args = Args::parse();
 
-    let layout_letters: Vec<char> = fs::read_to_string(args.layout + ".txt")
+    let layout_letters: String = fs::read_to_string(args.layout)
         .expect("couldn't read layout")
         .replace(" ", "")
         .replace("_", "⎵")
-        .replace("\n", "")
         .chars()
         .collect();
 
-    let layout_raw: [char; 32] = layout_letters.try_into().expect("invalid layout");
 
-    let corpus = fs::read_to_string(args.corpus + ".txt")
+    // has to be 37 because ⎵ is a few extra bytes
+    let layout_raw: [char; 32] = layout_letters[..37].replace("\n", "").chars().collect::<Vec<char>>().try_into().expect("couldn't read layout");
+
+    let magic_rules = layout_letters[38..].split("\n");
+
+    let mut corpus: String = fs::read_to_string(args.corpus)
         .expect("error reading corpus")
         .to_lowercase()
         .replace("\n", "⎵")
         .replace(" ", "⎵")
         .chars()
         .filter(|ch| layout_raw.contains(ch))
-        .collect::<String>();
+        .collect();
+
+    for rule in magic_rules {
+        if !rule.is_empty() {
+            corpus = corpus.replace(rule, &(rule.chars().next().unwrap().to_string() + "*"))
+        }
+    }
 
     #[rustfmt::skip]
     let layout = HashMap::from([
