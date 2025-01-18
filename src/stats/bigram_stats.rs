@@ -16,6 +16,12 @@ pub fn bigram_stats(
             insert_ngram = true;
         }
     }
+    if sfr(key1, key2) {
+        stats.sfr += 1;
+        if command == "sfr" {
+            insert_ngram = true;
+        }
+    }
     if ls(key1, key2) {
         stats.lsb += 1;
         if command == "lsb" {

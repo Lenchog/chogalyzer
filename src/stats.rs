@@ -1,7 +1,7 @@
 mod trigram_stats;
 mod bigram_stats;
 
-use crate::{output, Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
+use crate::{Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use std::collections::HashMap;
 
 pub fn analyze(corpus: String, layout: &HashMap<char, Key>, command: &String) -> Stats {

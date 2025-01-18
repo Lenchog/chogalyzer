@@ -19,6 +19,7 @@ pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
 
 pub fn print_stats(stats: Stats, layout: [char; 32]) {
     let sfbpercent = stats.sfb as f32 * 100.0 / stats.bigrams as f32;
+    let sfrpercent = stats.sfr as f32 * 100.0 / stats.bigrams as f32;
     let sfspercent = stats.sfs as f32 * 100.0 / stats.skipgrams as f32;
     let lsbpercent = stats.lsb as f32 * 100.0 / stats.bigrams as f32;
     let lsspercent = stats.lss as f32 * 100.0 / stats.skipgrams as f32;
@@ -41,6 +42,7 @@ pub fn print_stats(stats: Stats, layout: [char; 32]) {
         format_args!(
             concat!(
                 "SFB: {}%\n",
+                "SFR: {}%\n",
                 "SFS: {}%\n",
                 "LSB: {}%\n",
                 "LSS: {}%\n",
@@ -57,6 +59,7 @@ pub fn print_stats(stats: Stats, layout: [char; 32]) {
                 "Weak Redirects: {}%\n"
             ),
             sfbpercent,
+            sfrpercent,
             sfspercent,
             lsbpercent,
             lsspercent,

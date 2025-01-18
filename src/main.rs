@@ -26,6 +26,7 @@ enum Finger {
 #[derive(Default, Debug)]
 pub struct Stats {
     sfb: u32,
+    sfr: u32,
     sfs: u32,
     lsb: u32,
     lss: u32,
@@ -105,6 +106,7 @@ fn main() {
             output::print_stats(stats::analyze(corpus, &layout_raw_to_table(&layout), &"generate".to_string()), layout)
         },
         "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
+        "sfr" => output::print_ngrams(ngram_vec, stats.bigrams, "SFR".to_string()),
         "sfs" => output::print_ngrams(ngram_vec, stats.skipgrams, "SFS".to_string()),
         "lsbs" => output::print_ngrams(ngram_vec, stats.bigrams, "LSB".to_string()),
         "lss" => output::print_ngrams(ngram_vec, stats.skipgrams, "LSS".to_string()),
