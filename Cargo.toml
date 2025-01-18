@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ahash = "0.8.11"
 clap = { version = "4.5.26", features = ["derive"] }
 rand = "0.8.5"
 tabled = "0.17.0"
@@ -12,6 +13,7 @@ tabled = "0.17.0"
 codegen-units = 1
 lto = "fat"
 debug = 1
+panic = "abort"
 
 [build]
 rustflags = ["-C", "target-cpu=native"]

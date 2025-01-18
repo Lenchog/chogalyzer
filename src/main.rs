@@ -1,5 +1,6 @@
 use clap::Parser;
-use std::{collections::HashMap, fs};
+use std::fs;
+use ahash::AHashMap;
 use rand::prelude::*;
 
 mod output;
@@ -43,7 +44,7 @@ pub struct Stats {
     pub bigrams: u32,
     pub skipgrams: u32,
     pub trigrams: u32,
-    pub ngram_table: HashMap<[char; 3], u32>,
+    pub ngram_table: AHashMap<[char; 3], u32>,
 }
 
 #[derive(Parser, Debug)]
@@ -153,9 +154,9 @@ fn generate(iterations: u32, max_iterations: u32, old_layout: [char; 32], corpus
     }
 }
 
-fn layout_raw_to_table(layout_raw: &[char; 32]) -> HashMap<char, Key> {
+fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {
     #[rustfmt::skip]
-    return HashMap::from([
+    return AHashMap::from([
         // LH top row
         ( layout_raw[0], Key { hand: 0, finger: Finger::Pinky, row: 0, lateral: false, },),
         ( layout_raw[1], Key { hand: 0, finger: Finger::Ring, row: 0, lateral: false, },),
