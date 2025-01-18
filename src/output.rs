@@ -17,7 +17,7 @@ pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     println!("{}", table);
 }
 
-pub fn print_stats(stats: Stats) {
+pub fn print_stats(stats: Stats, layout: [char; 32]) {
     let sfbpercent = stats.sfb as f32 * 100.0 / stats.bigrams as f32;
     let sfspercent = stats.sfs as f32 * 100.0 / stats.skipgrams as f32;
     let lsbpercent = stats.lsb as f32 * 100.0 / stats.bigrams as f32;
@@ -31,6 +31,11 @@ pub fn print_stats(stats: Stats) {
     let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.trigrams as f32;
     let weakredpercent = stats.weak_red as f32 * 100.0 / stats.trigrams as f32;
     let redpercent = stats.red as f32 * 100.0 / stats.trigrams as f32;
+    println!(" 
+        {}
+        {}
+        {}
+        {}", layout[0..9].iter().collect::<String>(), layout[10..19].iter().collect::<String>(), layout[20..29].iter().collect::<String>(), layout[30..31].iter().collect::<String>());
     println!(
         "{}",
         format_args!(

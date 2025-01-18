@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::{collections::HashMap, fs};
+use rand::prelude::*;
 
 mod output;
 
@@ -92,8 +93,67 @@ fn main() {
         }
     }
 
+    let stats = stats::analyze(corpus.clone(), &layout_raw_to_table(&layout_raw), &args.command);
+
+    let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
+    ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+    match args.command.as_str() {
+        "analyze" => output::print_stats(stats, layout_raw),
+        "generate" => {
+            let layout = generate(0, 1000, layout_raw, &corpus);
+            output::print_stats(stats::analyze(corpus, &layout_raw_to_table(&layout), &"generate".to_string()), layout)
+        },
+        "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
+        "sfs" => output::print_ngrams(ngram_vec, stats.skipgrams, "SFS".to_string()),
+        "lsbs" => output::print_ngrams(ngram_vec, stats.bigrams, "LSB".to_string()),
+        "lss" => output::print_ngrams(ngram_vec, stats.skipgrams, "LSS".to_string()),
+        "fsb" => output::print_ngrams(ngram_vec, stats.bigrams, "FSB".to_string()),
+        "fss" => output::print_ngrams(ngram_vec, stats.skipgrams, "FSS".to_string()),
+        "alt" => output::print_ngrams(ngram_vec, stats.trigrams, "Alt".to_string()),
+        "inroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Inroll".to_string()),
+        "outroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Outroll".to_string()),
+        "inthreeroll" => {
+            output::print_ngrams(ngram_vec, stats.trigrams, "Inthreeroll".to_string())
+        }
+        "outthreeroll" => {
+            output::print_ngrams(ngram_vec, stats.trigrams, "Outthreeroll".to_string())
+        }
+        "red" => output::print_ngrams(ngram_vec, stats.trigrams, "Red".to_string()),
+        "weak" => output::print_ngrams(ngram_vec, stats.trigrams, "Weak".to_string()),
+        "thumb" => output::print_ngrams(ngram_vec, stats.trigrams, "Thumb".to_string()),
+        "bigrams" => output::print_ngrams(ngram_vec, stats.bigrams, "Bigrams".to_string()),
+        "skipgrams" => {
+            output::print_ngrams(ngram_vec, stats.skipgrams, "Skipgrams".to_string())
+        }
+        "trigrams" => {
+            output::print_ngrams(ngram_vec, stats.trigrams, "Trigrams".to_string())
+        }
+        _ => println!("invalid command"),
+    }
+}
+
+fn generate(iterations: u32, max_iterations: u32, old_layout: [char; 32], corpus: &String) -> [char; 32] {
+    println!("{}% done", iterations as f32 / max_iterations as f32 * 100.0);
+    if iterations == max_iterations {
+        old_layout
+    }
+    else {
+        let mut rng = rand::thread_rng();
+        let mut new_layout: [char; 32] = old_layout;
+        new_layout.swap(rng.gen_range(0..old_layout.len()), rng.gen_range(0..old_layout.len()));
+        if stats::analyze(corpus.to_string(), &layout_raw_to_table(&old_layout), &"generate".to_string()).sfb > stats::analyze(corpus.to_string(), &layout_raw_to_table(&new_layout), &"generate".to_string()).sfb {
+            generate(iterations + 1, max_iterations, new_layout, corpus)
+        }
+        else { 
+            generate(iterations + 1, max_iterations, old_layout, corpus) 
+        }
+    }
+}
+
+fn layout_raw_to_table(layout_raw: &[char; 32]) -> HashMap<char, Key> {
     #[rustfmt::skip]
-    let layout = HashMap::from([
+    return HashMap::from([
         // LH top row
         ( layout_raw[0], Key { hand: 0, finger: Finger::Pinky, row: 0, lateral: false, },),
         ( layout_raw[1], Key { hand: 0, finger: Finger::Ring, row: 0, lateral: false, },),
@@ -134,39 +194,4 @@ fn main() {
         ( layout_raw[30], Key { hand: 0, finger: Finger::Thumb, row: 3, lateral: false, },),
         ( layout_raw[31], Key { hand: 1, finger: Finger::Thumb, row: 3, lateral: false, },),
     ]);
-
-    let stats = stats::analyze(corpus, layout, &args.command);
-
-    let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
-    ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
-
-    match args.command.as_str() {
-        "analyze" => output::print_stats(stats),
-        "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
-        "sfs" => output::print_ngrams(ngram_vec, stats.skipgrams, "SFS".to_string()),
-        "lsbs" => output::print_ngrams(ngram_vec, stats.bigrams, "LSB".to_string()),
-        "lss" => output::print_ngrams(ngram_vec, stats.skipgrams, "LSS".to_string()),
-        "fsb" => output::print_ngrams(ngram_vec, stats.bigrams, "FSB".to_string()),
-        "fss" => output::print_ngrams(ngram_vec, stats.skipgrams, "FSS".to_string()),
-        "alt" => output::print_ngrams(ngram_vec, stats.trigrams, "Alt".to_string()),
-        "inroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Inroll".to_string()),
-        "outroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Outroll".to_string()),
-        "inthreeroll" => {
-            output::print_ngrams(ngram_vec, stats.trigrams, "Inthreeroll".to_string())
-        }
-        "outthreeroll" => {
-            output::print_ngrams(ngram_vec, stats.trigrams, "Outthreeroll".to_string())
-        }
-        "red" => output::print_ngrams(ngram_vec, stats.trigrams, "Red".to_string()),
-        "weak" => output::print_ngrams(ngram_vec, stats.trigrams, "Weak".to_string()),
-        "thumb" => output::print_ngrams(ngram_vec, stats.trigrams, "Thumb".to_string()),
-        "bigrams" => output::print_ngrams(ngram_vec, stats.bigrams, "Bigrams".to_string()),
-        "skipgrams" => {
-            output::print_ngrams(ngram_vec, stats.skipgrams, "Skipgrams".to_string())
-        }
-        "trigrams" => {
-            output::print_ngrams(ngram_vec, stats.trigrams, "Trigrams".to_string())
-        }
-        _ => println!("invalid command"),
-    }
 }

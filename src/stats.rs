@@ -1,10 +1,10 @@
 mod trigram_stats;
 mod bigram_stats;
 
-use crate::{Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
+use crate::{output, Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use std::collections::HashMap;
 
-pub fn analyze(corpus: String, layout: HashMap<char, Key>, command: &String) -> Stats {
+pub fn analyze(corpus: String, layout: &HashMap<char, Key>, command: &String) -> Stats {
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
     let mut stats: Stats = Stats::default();
     let mut ngram_table: HashMap<[char; 3], u32> = HashMap::new();
