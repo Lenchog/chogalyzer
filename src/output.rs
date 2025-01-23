@@ -1,5 +1,5 @@
 use crate::Stats;
-use tabled::{settings::Style, builder::Builder};
+use tabled::{builder::Builder, settings::Style};
 
 pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     let min_range = 0;
@@ -32,15 +32,19 @@ pub fn print_stats(stats: Stats, layout: [char; 32]) {
     let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.trigrams as f32;
     let weakredpercent = stats.weak_red as f32 * 100.0 / stats.trigrams as f32;
     let redpercent = stats.red as f32 * 100.0 / stats.trigrams as f32;
-    println!(" 
-        {}
-        {}
-        {}
-        {}", layout[0..9].iter().collect::<String>(), layout[10..19].iter().collect::<String>(), layout[20..29].iter().collect::<String>(), layout[30..31].iter().collect::<String>());
+    let score = stats.score;
+    println!(
+        "{}\n{}\n{}\n{}",
+        layout[0..10].iter().collect::<String>(),
+        layout[10..20].iter().collect::<String>(),
+        layout[20..30].iter().collect::<String>(),
+        layout[30..32].iter().collect::<String>()
+    );
     println!(
         "{}",
         format_args!(
             concat!(
+                "Score: {}%\n",
                 "SFB: {}%\n",
                 "SFR: {}%\n",
                 "SFS: {}%\n",
@@ -58,6 +62,7 @@ pub fn print_stats(stats: Stats, layout: [char; 32]) {
                 "Redirects: {}%\n",
                 "Weak Redirects: {}%\n"
             ),
+            score,
             sfbpercent,
             sfrpercent,
             sfspercent,

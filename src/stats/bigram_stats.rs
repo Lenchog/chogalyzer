@@ -1,40 +1,47 @@
+use ahash::AHashMap;
+
 use crate::Finger;
 use crate::Key;
 use crate::Stats;
 
-pub fn bigram_stats(
-    key1: &Key,
-    key2: &Key,
-    command: &String,
-    mut stats: Stats,
-) -> (Stats, bool) {
-    let mut insert_ngram = false;
+pub fn bigram_stats(key1: &Key, key2: &Key, command: &String, mut stats: Stats, finger_weights: &AHashMap<Finger, i32>) -> (Stats, bool, bool) {
+    let mut insert_bigram = false;
+    let mut bad_bigram = false;
+
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
+        let distance: i32 = (key1.row - key2.row).into();
+        stats.fspeed += 6 * finger_weights[&key1.finger] * distance.abs();
+        bad_bigram = true;
         if command == "sfb" {
-            insert_ngram = true;
+            insert_bigram = true;
         }
     }
+
     if sfr(key1, key2) {
         stats.sfr += 1;
+        stats.fspeed += 3 * finger_weights[&key1.finger];
+        bad_bigram = true;
         if command == "sfr" {
-            insert_ngram = true;
+            insert_bigram = true;
         }
     }
     if ls(key1, key2) {
         stats.lsb += 1;
+        bad_bigram = true;
         if command == "lsb" {
-            insert_ngram = true;
+            insert_bigram = true;
         }
     }
     if fs(key1, key2) {
         stats.fsb += 1;
+        bad_bigram = true;
         if command == "fsb" {
-            insert_ngram = true;
+            insert_bigram = true;
         }
     }
-    (stats, insert_ngram)
+    (stats, insert_bigram, bad_bigram)
 }
 
 pub fn skipgram_stats(
@@ -43,10 +50,13 @@ pub fn skipgram_stats(
     epic_key1: &Key,
     command: &String,
     mut stats: Stats,
+    finger_weights: &AHashMap<Finger, i32>
 ) -> (Stats, bool) {
     let mut insert_ngram = false;
     stats.skipgrams += 1;
     if sf(key1, key2) {
+        let distance: i32 = (key1.row - key2.row).into();
+        stats.fspeed += distance.abs() * finger_weights[&key1.finger];
         stats.sfs += 1;
         if command == "sfs" {
             insert_ngram = true;
@@ -97,21 +107,22 @@ fn sf(key1: &Key, key2: &Key) -> bool {
 }
 
 fn ls(key1: &Key, key2: &Key) -> bool {
-    if (key1.lateral || key2.lateral) && key1.hand == key2.hand {
+    if (key1.lateral || key2.lateral) && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
         return true;
     }
     false
 }
 
 fn fs(key1: &Key, key2: &Key) -> bool {
-    if (((key1.finger == Finger::Ring || key1.finger == Finger::Middle)
+    /* if (((key1.finger == Finger::Ring || key1.finger == Finger::Middle)
         && (key2.finger == Finger::Pinky || key2.finger == Finger::Index)
         && (key1.row == 2 && key2.row == 0 || key1.row == 0 && key2.row == 2))
         || ((key2.finger == Finger::Ring || key2.finger == Finger::Middle)
             && (key1.finger == Finger::Pinky || key1.finger == Finger::Index)
             && key2.row == 0
             && key1.row == 2))
-        && key1.hand == key2.hand
+        && key1.hand == key2.hand */
+    if (key1.row as i32 - key2.row as i32).abs() == 2 && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb && key1.finger != key2.finger
     {
         return true;
     }

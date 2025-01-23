@@ -1,48 +1,73 @@
-mod trigram_stats;
 mod bigram_stats;
+mod trigram_stats;
 
-use crate::{Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
+use crate::{Finger, Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use ahash::AHashMap;
 
-pub fn analyze(corpus: String, layout: &AHashMap<char, Key>, command: &String) -> Stats {
+pub fn analyze(
+    mut corpus: String,
+    layout_letters: [char; 32],
+    command: &String,
+    magic_rules: [String; 10]
+) -> Stats {
+    let layout = layout_raw_to_table(&layout_letters);
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
     let mut stats: Stats = Stats::default();
-    let mut ngram_table: AHashMap<[char; 3], u32> = AHashMap::new();
+    let mut char_freq: AHashMap<char, u32> = AHashMap::default();
+    let finger_weights: AHashMap<Finger, i32> = AHashMap::from([
+        (Finger::Pinky, 12),
+        (Finger::Ring, 7),
+        (Finger::Middle, 4),
+        (Finger::Index, 3),
+        (Finger::Thumb, 10)
+    ]);
+
+    for rule in magic_rules {
+        if !rule.is_empty() {
+            corpus = corpus.replace(&rule, &(rule.chars().next().unwrap().to_string() + "*"));
+        }
+    }
 
     for letter in corpus.chars() {
         let key = &layout[&letter];
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
+        *char_freq.entry(letter).or_insert(0) += 1;
 
-        if INCLUDE_SPACE || (previous_letter != '⎵' && letter != '⎵') {
-            let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats);
+        if INCLUDE_SPACE || (previous_letter != '⎵' && letter != '⎵')
+        {
+            let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats, &finger_weights);
             stats = bigram.0;
             if bigram.1 {
-                *ngram_table
+                *stats.ngram_table
                     .entry([previous_letter, letter, ' '])
                     .or_insert(0) += 1;
             }
+            if bigram.2 {
+                stats.bad_bigrams.push(format!("{}{}", previous_letter, letter));
+            }
         }
 
-        if INCLUDE_SPACE || skip_previous_letter != '⎵' && letter != '⎵' {
+        if INCLUDE_SPACE || (skip_previous_letter != '⎵' && letter != '⎵')
+        {
             let skipgram = bigram_stats::skipgram_stats(
                 skip_previous_key,
                 key,
                 epic_previous_key,
                 command,
                 stats,
+                &finger_weights
             );
             stats = skipgram.0;
             if skipgram.1 {
-                *ngram_table
+                *stats.ngram_table
                     .entry([skip_previous_letter, letter, ' '])
                     .or_insert(0) += 1;
             }
         }
 
-        if INCLUDE_SPACE
-            || (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵')
+        if INCLUDE_SPACE|| (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵') 
         {
             let trigram = trigram_stats::trigram_stats(
                 skip_previous_key,
@@ -54,18 +79,135 @@ pub fn analyze(corpus: String, layout: &AHashMap<char, Key>, command: &String) -
             stats = trigram.0;
             stats.trigrams += 1;
             if trigram.1 {
-                *ngram_table
+                *stats.ngram_table
                     .entry([skip_previous_letter, previous_letter, letter])
                     .or_insert(0) += 1;
             }
         }
+
         epic_previous_letter = letter;
         skip_previous_letter = previous_letter;
         previous_letter = letter;
+        if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
+            stats.trigrams -= stats.thumb_stat;
+        }
     }
-    if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
-        stats.trigrams -= stats.thumb_stat;
+    #[rustfmt::skip]
+    let weighting: [u32; 32] = [
+        12, 4, 3, 6, 7, 7, 6, 3, 4, 12, 
+        3,  1, 0, 0, 6, 6, 0, 0, 1, 3, 
+        8,  9, 8, 7, 9, 9, 7, 8, 9, 8, 
+                  0,       0,
+    ];
+    for i in 0..layout_letters.len() {
+        if char_freq.contains_key(&layout_letters[i]) {
+            stats.heatmap += (weighting[i] * char_freq[&layout_letters[i]]) as i32 ;
+        }
     }
-    stats.ngram_table = ngram_table;
+    let weights = Stats {
+        score: 0,
+        heatmap: -30,
+        fspeed: -200,
+        sfb: -200,
+        sfr: -80,
+        sfs: -40,
+        fsb: -200,
+        fss: -40,
+        lsb: -100,
+        lss: -20,
+        inroll: 9,
+        outroll: 4,
+        alt: 0,
+        inthreeroll: 12,
+        outthreeroll: 4,
+        weak_red: -400,
+        red: -1,
+        thumb_stat: 0,
+        bigrams: 0,
+        skipgrams: 0,
+        trigrams: 0,
+        ngram_table: AHashMap::default(),
+        bad_bigrams: vec![],
+    };
+    stats.score = score(&stats, &weights);
     stats
+}
+
+pub fn score(stats: &Stats, weighting: &Stats) -> i32 {
+    let mut score = 0;
+    score += stats.sfb * weighting.sfb;
+    score += stats.heatmap * weighting.heatmap / 100;
+    score += stats.fspeed * weighting.fspeed / 100;
+    score += stats.lsb * weighting.lsb ;
+    score += stats.lss * weighting.lss ;
+    score += stats.fsb * weighting.fsb ;
+    score += stats.fss * weighting.fss ;
+    score += stats.inroll * weighting.inroll ;
+    score += stats.inthreeroll * weighting.inthreeroll ;
+    score += stats.outroll * weighting.outroll ;
+    score += stats.alt * weighting.alt ;
+    score += stats.outthreeroll * weighting.outthreeroll ;
+    score += stats.weak_red * weighting.weak_red ;
+    score += stats.red * weighting.red ;
+    /* println!("
+        score: {}
+        heatmap: {}
+        fspeed: {}
+        lsb: {}
+        lss: {}
+        fsb: {}
+        fss: {}
+        inroll: {}
+        outroll: {}
+        inthreeroll: {}
+        outthreeroll: {}
+        weak red: {}
+        red: {}
+    ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 100, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
+    score
+}
+
+fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {
+    #[rustfmt::skip]
+    return AHashMap::from([
+        // LH top row
+        ( layout_raw[0], Key { hand: 0, finger: Finger::Pinky, row: 0, lateral: false, },),
+        ( layout_raw[1], Key { hand: 0, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[2], Key { hand: 0, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[3], Key { hand: 0, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[4], Key { hand: 0, finger: Finger::Index, row: 0, lateral: true, },),
+        // RH top row
+        ( layout_raw[5], Key { hand: 1, finger: Finger::Index, row: 0, lateral: true, },),
+        ( layout_raw[6], Key { hand: 1, finger: Finger::Index, row: 0, lateral: false, },),
+        ( layout_raw[7], Key { hand: 1, finger: Finger::Middle, row: 0, lateral: false, },),
+        ( layout_raw[8], Key { hand: 1, finger: Finger::Ring, row: 0, lateral: false, },),
+        ( layout_raw[9], Key { hand: 1, finger: Finger::Pinky, row: 0, lateral: false, },),
+        // LH middle row
+        ( layout_raw[10], Key { hand: 0, finger: Finger::Pinky, row: 1, lateral: false, },),
+        ( layout_raw[11], Key { hand: 0, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[12], Key { hand: 0, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[13], Key { hand: 0, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[14], Key { hand: 0, finger: Finger::Index, row: 1, lateral: true, },),
+        // RH middle row
+        ( layout_raw[15], Key { hand: 1, finger: Finger::Index, row: 1, lateral: true, },),
+        ( layout_raw[16], Key { hand: 1, finger: Finger::Index, row: 1, lateral: false, },),
+        ( layout_raw[17], Key { hand: 1, finger: Finger::Middle, row: 1, lateral: false, },),
+        ( layout_raw[18], Key { hand: 1, finger: Finger::Ring, row: 1, lateral: false, },),
+        ( layout_raw[19], Key { hand: 1, finger: Finger::Pinky, row: 1, lateral: false, },),
+        // LH bottom row
+        ( layout_raw[20], Key { hand: 0, finger: Finger::Pinky, row: 2, lateral: false, },),
+        ( layout_raw[21], Key { hand: 0, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[22], Key { hand: 0, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[23], Key { hand: 0, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[24], Key { hand: 0, finger: Finger::Index, row: 2, lateral: true, },),
+        // RH bottom row
+        ( layout_raw[25], Key { hand: 1, finger: Finger::Index, row: 2, lateral: true, },),
+        ( layout_raw[26], Key { hand: 1, finger: Finger::Index, row: 2, lateral: false, },),
+        ( layout_raw[27], Key { hand: 1, finger: Finger::Middle, row: 2, lateral: false, },),
+        ( layout_raw[28], Key { hand: 1, finger: Finger::Ring, row: 2, lateral: false, },),
+        ( layout_raw[29], Key { hand: 1, finger: Finger::Pinky, row: 2, lateral: false, },),
+        // Thumb keys
+        ( layout_raw[30], Key { hand: 0, finger: Finger::Thumb, row: 3, lateral: false, },),
+        ( layout_raw[31], Key { hand: 1, finger: Finger::Thumb, row: 3, lateral: false, },),
+    ]);
 }

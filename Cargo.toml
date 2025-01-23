@@ -6,7 +6,9 @@ edition = "2021"
 [dependencies]
 ahash = "0.8.11"
 clap = { version = "4.5.26", features = ["derive"] }
+indicatif = "0.17.9"
 rand = "0.8.5"
+shuffle = "0.1.7"
 tabled = "0.17.0"
 
 [profile.release]

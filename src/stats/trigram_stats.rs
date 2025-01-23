@@ -39,8 +39,7 @@ fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
 }
 
 fn roll(key1: &Key, key2: &Key) -> Trigram {
-    if !INCLUDE_THUMB_ROLL && (key1.finger == Finger::Thumb || key2.finger == Finger::Thumb)
-    {
+    if !INCLUDE_THUMB_ROLL && (key1.finger == Finger::Thumb || key2.finger == Finger::Thumb) {
         return Trigram::Other;
     }
     if key1.finger > key2.finger {
