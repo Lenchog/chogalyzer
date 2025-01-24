@@ -106,16 +106,16 @@ fn main() {
         magic_rules.push(rule.to_string());
     }
 
-    let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, magic_rules);
+    let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, magic_rules.clone());
 
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     match args.command.as_str() {
-        "analyze" => output::print_stats(stats, layout_raw),
+        "analyze" => output::print_stats(stats, layout_raw, &magic_rules),
         "generate" => { 
             let layout = generation::generate_threads(layout_raw, &corpus, args.iterations);
-            output::print_stats(stats::analyze(corpus, layout.0, &args.command, layout.2.to_vec()), layout.0);
+            output::print_stats(stats::analyze(corpus, layout.0, &args.command, layout.2.clone()), layout.0, &layout.2);
         },
         "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
         "sfr" => output::print_ngrams(ngram_vec, stats.bigrams, "SFR".to_string()),
