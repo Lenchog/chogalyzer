@@ -99,7 +99,14 @@ fn main() {
         .filter(|ch| layout_raw.contains(ch))
         .collect();
 
-    let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, Default::default());
+    let magic_rules_raw = layout_letters[38..].split("\n");
+    let mut magic_rules: [String; 10] = Default::default();
+
+    for (i, rule) in magic_rules_raw.enumerate() {
+        magic_rules[i] = rule.to_string();
+    }
+
+    let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, magic_rules);
 
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
