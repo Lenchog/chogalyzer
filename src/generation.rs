@@ -23,7 +23,7 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
     let mut rng = thread_rng();
     let mut layout: ([char; 32], Stats, [String; 10]) = (layout_raw, Stats::default(), Default::default());
     layout.0.shuffle(&mut rng);
-    layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone());
+    layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().to_vec());
     let bar = ProgressBar::new(max_iterations);
     multibars.add(bar.clone());
 
@@ -33,7 +33,7 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
         let letter1 = rng.gen_range(0..layout.0.len());
         let letter2 = rng.gen_range(0..layout.0.len());
         layout.0.swap(letter1, letter2);
-        layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone());
+        layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().to_vec());
         println!("{}", layout.1.score);
         stat_array[i] = layout.1.clone();
     }
@@ -75,7 +75,7 @@ fn attempt_swap(
         corpus.to_string(),
         new_layout,
         &"generate".to_string(),
-        new_magic.clone()
+        new_magic.clone().to_vec()
     );
 
     

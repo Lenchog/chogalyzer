@@ -100,10 +100,10 @@ fn main() {
         .collect();
 
     let magic_rules_raw = layout_letters[38..].split("\n");
-    let mut magic_rules: [String; 10] = Default::default();
+    let mut magic_rules: Vec<String> = Default::default();
 
-    for (i, rule) in magic_rules_raw.enumerate() {
-        magic_rules[i] = rule.to_string();
+    for rule in magic_rules_raw {
+        magic_rules.push(rule.to_string());
     }
 
     let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, magic_rules);
@@ -115,8 +115,7 @@ fn main() {
         "analyze" => output::print_stats(stats, layout_raw),
         "generate" => { 
             let layout = generation::generate_threads(layout_raw, &corpus, args.iterations);
-            //dbg!(&layout);
-            output::print_stats(stats::analyze(corpus, layout.0, &args.command, layout.2), layout.0);
+            output::print_stats(stats::analyze(corpus, layout.0, &args.command, layout.2.to_vec()), layout.0);
         },
         "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
         "sfr" => output::print_ngrams(ngram_vec, stats.bigrams, "SFR".to_string()),

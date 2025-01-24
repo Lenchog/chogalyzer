@@ -8,7 +8,7 @@ pub fn analyze(
     mut corpus: String,
     layout_letters: [char; 32],
     command: &String,
-    magic_rules: [String; 10]
+    magic_rules: Vec <String>
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
