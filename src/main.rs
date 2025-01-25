@@ -70,7 +70,7 @@ struct Args {
     #[arg(short, long, default_value_t = 10)]
     magic_rules: usize,
 
-    #[arg(short, long, default_value_t = 0.99)]
+    #[arg(long, default_value_t = 0.99)]
     cooling: f64,
 }
 
