@@ -27,23 +27,23 @@ enum Finger {
 
 #[derive(Default, Debug, Clone)]
 pub struct Stats {
-    score: i32,
-    fspeed: i32,
-    sfb: i32,
-    sfr: i32,
-    sfs: i32,
-    lsb: i32,
-    lss: i32,
-    fsb: i32,
-    fss: i32,
-    inroll: i32,
-    outroll: i32,
-    alt: i32,
-    inthreeroll: i32,
-    outthreeroll: i32,
-    weak_red: i32,
-    red: i32,
-    heatmap: i32,
+    score: i64,
+    fspeed: i64,
+    sfb: i64,
+    sfr: i64,
+    sfs: i64,
+    lsb: i64,
+    lss: i64,
+    fsb: i64,
+    fss: i64,
+    inroll: i64,
+    outroll: i64,
+    alt: i64,
+    inthreeroll: i64,
+    outthreeroll: i64,
+    weak_red: i64,
+    red: i64,
+    heatmap: i64,
     thumb_stat: u32,
     pub bigrams: u32,
     pub skipgrams: u32,
@@ -66,6 +66,12 @@ struct Args {
 
     #[arg(short, long, default_value_t = 500)]
     iterations: u64,
+
+    #[arg(short, long, default_value_t = 10)]
+    magic_rules: usize,
+
+    #[arg(short, long, default_value_t = 0.99)]
+    cooling: f64,
 }
 
 const INCLUDE_THUMB_ALT: bool = true;
@@ -75,7 +81,7 @@ const INCLUDE_SPACE: bool = true;
 fn main() {
     let args = Args::parse();
 
-    let layout_letters: String = fs::read_to_string(args.layout)
+    let layout_letters: String = fs::read_to_string(args.layout.clone())
         .expect("couldn't read layout")
         .replace(" ", "")
         .replace("_", "⎵")
@@ -112,10 +118,15 @@ fn main() {
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     match args.command.as_str() {
-        "analyze" => output::print_stats(stats, layout_raw, &magic_rules),
+        "analyze" => output::print_stats(stats, layout_raw, &magic_rules, args.layout.clone().strip_suffix(".txt").unwrap().to_string()),
         "generate" => { 
-            let layout = generation::generate_threads(layout_raw, &corpus, args.iterations);
-            output::print_stats(stats::analyze(corpus, layout.0, &args.command, layout.2.clone()), layout.0, &layout.2);
+            let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, args.magic_rules, args.cooling);
+            output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2, layout.0[10..20].iter().collect());
+            /* for magic_rules in 1..14 {
+                let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, magic_rules as usize);
+                println!("{} Magic rules: {}", magic_rules, layout.1);
+                //output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2);
+            } */
         },
         "sfb" => output::print_ngrams(ngram_vec, stats.bigrams, "SFB".to_string()),
         "sfr" => output::print_ngrams(ngram_vec, stats.bigrams, "SFR".to_string()),

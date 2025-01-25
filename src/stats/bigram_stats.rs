@@ -4,15 +4,15 @@ use crate::Finger;
 use crate::Key;
 use crate::Stats;
 
-pub fn bigram_stats(key1: &Key, key2: &Key, command: &String, mut stats: Stats, finger_weights: &AHashMap<Finger, i32>) -> (Stats, bool, bool) {
+pub fn bigram_stats(key1: &Key, key2: &Key, command: &String, mut stats: Stats, finger_weights: &AHashMap<Finger, i64>) -> (Stats, bool, bool) {
     let mut insert_bigram = false;
     let mut bad_bigram = false;
 
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
-        let distance: i32 = (key1.row - key2.row).into();
-        stats.fspeed += 6 * finger_weights[&key1.finger] * distance.abs();
+        let distance: i64 = (key1.row - key2.row).into();
+        stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs() as i64;
         bad_bigram = true;
         if command == "sfb" {
             insert_bigram = true;
@@ -50,13 +50,13 @@ pub fn skipgram_stats(
     epic_key1: &Key,
     command: &String,
     mut stats: Stats,
-    finger_weights: &AHashMap<Finger, i32>
+    finger_weights: &AHashMap<Finger, i64>
 ) -> (Stats, bool) {
     let mut insert_ngram = false;
     stats.skipgrams += 1;
     if sf(key1, key2) {
-        let distance: i32 = (key1.row - key2.row).into();
-        stats.fspeed += distance.abs() * finger_weights[&key1.finger];
+        let distance: i64 = (key1.row - key2.row).into();
+        stats.fspeed += distance.abs() as i64 * finger_weights[&key1.finger] as i64;
         stats.sfs += 1;
         if command == "sfs" {
             insert_ngram = true;
@@ -122,7 +122,7 @@ fn fs(key1: &Key, key2: &Key) -> bool {
             && key2.row == 0
             && key1.row == 2))
         && key1.hand == key2.hand */
-    if (key1.row as i32 - key2.row as i32).abs() == 2 && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb && key1.finger != key2.finger
+    if (key1.row as i64 - key2.row as i64).abs() == 2 && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb && key1.finger != key2.finger
     {
         return true;
     }

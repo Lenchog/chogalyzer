@@ -14,12 +14,12 @@ pub fn analyze(
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
     let mut stats: Stats = Stats::default();
     let mut char_freq: AHashMap<char, u32> = AHashMap::default();
-    let finger_weights: AHashMap<Finger, i32> = AHashMap::from([
-        (Finger::Pinky, 12),
-        (Finger::Ring, 7),
-        (Finger::Middle, 4),
-        (Finger::Index, 3),
-        (Finger::Thumb, 10)
+    let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
+        (Finger::Pinky, 66),
+        (Finger::Ring, 28),
+        (Finger::Middle, 21),
+        (Finger::Index, 18),
+        (Finger::Thumb, 50)
     ]);
 
     for rule in magic_rules {
@@ -101,13 +101,13 @@ pub fn analyze(
     ];
     for i in 0..layout_letters.len() {
         if char_freq.contains_key(&layout_letters[i]) {
-            stats.heatmap += (weighting[i] * char_freq[&layout_letters[i]]) as i32 ;
+            stats.heatmap += (weighting[i] * char_freq[&layout_letters[i]]) as i64 ;
         }
     }
     let weights = Stats {
         score: 0,
-        heatmap: -30,
-        fspeed: -200,
+        heatmap: -100,
+        fspeed: -100,
         sfb: -200,
         sfr: -80,
         sfs: -40,
@@ -133,11 +133,10 @@ pub fn analyze(
     stats
 }
 
-pub fn score(stats: &Stats, weighting: &Stats) -> i32 {
+pub fn score(stats: &Stats, weighting: &Stats) -> i64 {
     let mut score = 0;
-    score += stats.sfb * weighting.sfb;
+    score += stats.fspeed * weighting.fspeed / 7;
     score += stats.heatmap * weighting.heatmap / 100;
-    score += stats.fspeed * weighting.fspeed / 100;
     score += stats.lsb * weighting.lsb ;
     score += stats.lss * weighting.lss ;
     score += stats.fsb * weighting.fsb ;
@@ -163,7 +162,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> i32 {
         outthreeroll: {}
         weak red: {}
         red: {}
-    ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 100, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
+    ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 7, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
     score
 }
 
