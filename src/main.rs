@@ -29,8 +29,7 @@ fn main() {
 
     let layout_letters: String = fs::read_to_string(args.layout.clone())
         .expect("couldn't read layout")
-        .replace(' ', "")
-        .replace(' ', "")
+        .replace([' ', ' '], "")
         .replace('_', "⎵")
         .chars()
         .collect();
