@@ -1,4 +1,4 @@
-use std::fs;
+rse std::fs;
 use clap::Parser;
 
 use chogalyzer::{generation, output, stats};
@@ -46,7 +46,7 @@ fn main() {
     let corpus: String = fs::read_to_string(args.corpus)
         .expect("error reading corpus")
         .to_lowercase()
-        .replace(['\n', ' ', "  "], "⎵")
+        .replace(['\n', ' '], "⎵")
         .chars()
         .filter(|ch| layout_raw.contains(ch))
         .collect();
