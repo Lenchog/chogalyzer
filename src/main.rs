@@ -1,4 +1,4 @@
-rse std::fs;
+use std::fs;
 use clap::Parser;
 
 use chogalyzer::{generation, output, stats};
