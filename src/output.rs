@@ -65,6 +65,9 @@ pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, 
     general.push_record(["Fspeed", &stats.fspeed.to_string()]);
     general.push_record(["Heatmap", &stats.heatmap.to_string()]);
     general.push_record(["Alt", &(altpercent.to_string() + "%")]);
+    general.push_record(["SFR", &(sfrpercent.to_string() + "%")]);
+    general.push_record(["Red", &(redpercent.to_string() + "%")]);
+    general.push_record(["Weak Red", &(weakredpercent.to_string() + "%")]);
     let mut general_table = general.build();
     general_table.with(Style::sharp());
 
