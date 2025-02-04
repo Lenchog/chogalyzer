@@ -19,3 +19,10 @@ panic = "abort"
 
 [build]
 rustflags = ["-C", "target-cpu=native"]
+
+[dev-dependencies]
+diol = {version = "0.8.0", default-features = false}
+
+[[bench]]
+name = "my_benchmark"
+harness = false
