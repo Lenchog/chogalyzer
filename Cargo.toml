@@ -10,6 +10,7 @@ indicatif = "0.17.9"
 rand = "0.8.5"
 shuffle = "0.1.7"
 tabled = "0.17.0"
+chogalyzer = { path = "./" }
 
 [profile.release]
 codegen-units = 1
@@ -19,3 +20,10 @@ panic = "abort"
 
 [build]
 rustflags = ["-C", "target-cpu=native"]
+
+[dev-dependencies]
+diol = {version = "0.8.0", default-features = false}
+
+[[bench]]
+name = "my_benchmark"
+harness = false
