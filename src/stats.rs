@@ -4,7 +4,7 @@ mod trigram_stats;
 use crate::{Finger, Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use ahash::AHashMap;
 
-pub fn analyze(
+#[must_use] pub fn analyze(
     mut corpus: String,
     layout_letters: [char; 32],
     command: &String,
@@ -45,7 +45,7 @@ pub fn analyze(
                     .or_insert(0) += 1;
             }
             if bigram.2 {
-                stats.bad_bigrams.push(format!("{}{}", previous_letter, letter));
+                stats.bad_bigrams.push(format!("{previous_letter}{letter}"));
             }
         }
 
@@ -101,7 +101,7 @@ pub fn analyze(
     ];
     for i in 0..layout_letters.len() {
         if char_freq.contains_key(&layout_letters[i]) {
-            stats.heatmap += (weighting[i] * char_freq[&layout_letters[i]]) as i64 ;
+            stats.heatmap += i64::from(weighting[i] * char_freq[&layout_letters[i]]) ;
         }
     }
     let weights = Stats {
@@ -133,7 +133,7 @@ pub fn analyze(
     stats
 }
 
-pub fn score(stats: &Stats, weighting: &Stats) -> i64 {
+#[must_use] pub fn score(stats: &Stats, weighting: &Stats) -> i64 {
     let mut score = 0;
     score += stats.fspeed * weighting.fspeed / 7;
     score += stats.heatmap * weighting.heatmap / 100;

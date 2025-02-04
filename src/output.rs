@@ -14,7 +14,7 @@ pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     }
     let mut table = builder.build();
     table.with(Style::sharp());
-    println!("{}", table);
+    println!("{table}");
 }
 
 pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, layout_name: String) {
@@ -98,5 +98,5 @@ pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, 
         roll_table
     ];
     table.with(Style::sharp());
-    println!("{}", table);
+    println!("{table}");
 }

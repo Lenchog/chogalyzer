@@ -1,7 +1,7 @@
 use std::fs;
 use clap::Parser;
 
-use chogalyzer::*;
+use chogalyzer::{generation, output, stats};
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -29,14 +29,14 @@ fn main() {
 
     let layout_letters: String = fs::read_to_string(args.layout.clone())
         .expect("couldn't read layout")
-        .replace(" ", "")
-        .replace("_", "⎵")
+        .replace(' ', "")
+        .replace('_', "⎵")
         .chars()
         .collect();
 
     // has to be 37 because ⎵ is a few extra bytes
     let layout_raw: [char; 32] = layout_letters[..37]
-        .replace("\n", "")
+        .replace('\n', "")
         .chars()
         .collect::<Vec<char>>()
         .try_into()
@@ -45,13 +45,13 @@ fn main() {
     let corpus: String = fs::read_to_string(args.corpus)
         .expect("error reading corpus")
         .to_lowercase()
-        .replace("\n", "⎵")
-        .replace(" ", "⎵")
+        .replace('\n', "⎵")
+        .replace(' ', "⎵")
         .chars()
         .filter(|ch| layout_raw.contains(ch))
         .collect();
 
-    let magic_rules_raw = layout_letters[38..].split("\n");
+    let magic_rules_raw = layout_letters[38..].split('\n');
     let mut magic_rules: Vec<String> = Default::default();
 
     for rule in magic_rules_raw {
@@ -86,7 +86,7 @@ fn main() {
         "outroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Outroll".to_string()),
         "inthreeroll" => output::print_ngrams(ngram_vec, stats.trigrams, "Inthreeroll".to_string()),
         "outthreeroll" => {
-            output::print_ngrams(ngram_vec, stats.trigrams, "Outthreeroll".to_string())
+            output::print_ngrams(ngram_vec, stats.trigrams, "Outthreeroll".to_string());
         }
         "red" => output::print_ngrams(ngram_vec, stats.trigrams, "Red".to_string()),
         "weak" => output::print_ngrams(ngram_vec, stats.trigrams, "Weak".to_string()),

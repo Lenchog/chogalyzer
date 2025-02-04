@@ -28,7 +28,7 @@ fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     }
     if key1.hand == key2.hand && key2.hand == key3.hand {
         return onehand(key1, key2, key3);
-    };
+    }
     if key1.hand == key2.hand {
         roll(key1, key2)
     } else if key2.hand == key3.hand {

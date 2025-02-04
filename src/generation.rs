@@ -6,7 +6,7 @@ use std::thread;
 use crate::{stats, Stats};
 const THREADS: usize = 8;
 
-pub fn generate_threads(layout_raw: [char; 32], corpus: &String, max_iterations: u64, magic_rules: usize, cooling_rate: f64) -> ([char; 32], i64, Vec<String>) {
+#[must_use] pub fn generate_threads(layout_raw: [char; 32], corpus: &String, max_iterations: u64, magic_rules: usize, cooling_rate: f64) -> ([char; 32], i64, Vec<String>) {
     let mut layouts: [([char; 32], i64, Vec<String>); THREADS] = Default::default();
     let bars = MultiProgress::new();
     thread::scope(|s| {
@@ -23,7 +23,7 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
     let mut rng = thread_rng();
     let mut layout: ([char; 32], Stats, Vec<String>) = (layout_raw, Stats::default(), vec![Default::default(); magic_rules]);
     layout.0.shuffle(&mut rng);
-    layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().to_vec());
+    layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().clone());
     let bar = ProgressBar::new(max_iterations);
     multibars.add(bar.clone());
     let mut stat_array: [Stats; 10] = Default::default();
@@ -32,7 +32,7 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
         let letter1 = rng.gen_range(0..layout.0.len());
         let letter2 = rng.gen_range(0..layout.0.len());
         layout.0.swap(letter1, letter2);
-        layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().to_vec());
+        layout.1 = stats::analyze(corpus.to_string(), layout.0, &"generate".to_string(), layout.2.clone().clone());
         *layout_stats = layout.1.clone();
     }
     let mut temparature = standard_deviation(stat_array);
@@ -41,10 +41,9 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
         iterations += 1;
         layout = attempt_swap(false, layout.0, layout.2, corpus, layout.1.clone(), layout.1.bad_bigrams, temparature);
         //dbg!(&layout.1.bad_bigrams);
-        if !layout.1.bad_bigrams.is_empty() {
+        if layout.1.bad_bigrams.is_empty() {println!("perfection achieved baby!")} else {
             layout = attempt_swap(true, layout.0, layout.2, corpus, layout.1.clone(), layout.1.bad_bigrams, temparature);
         }
-        else {println!("perfection achieved baby!")};
         bar.inc(1);
         temparature *= cooling_rate;
     }
@@ -80,7 +79,7 @@ fn attempt_swap(
         corpus.to_string(),
         new_layout,
         &"generate".to_string(),
-        new_magic.clone().to_vec()
+        new_magic.clone().clone()
     );
 
     
@@ -119,7 +118,7 @@ fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: Vec<String>) -> Vec<Str
 fn standard_deviation(stat_array: [Stats; 10]) -> f64 {
     let mut sum = 0.0;
     for layout in &stat_array {
-        sum += layout.score as f64
+        sum += layout.score as f64;
     }
     let mean = sum / stat_array.len() as f64;
     sum = 0.0;

@@ -122,7 +122,7 @@ fn fs(key1: &Key, key2: &Key) -> bool {
             && key2.row == 0
             && key1.row == 2))
         && key1.hand == key2.hand */
-    if (key1.row as i64 - key2.row as i64).abs() == 2 && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb && key1.finger != key2.finger
+    if (i64::from(key1.row) - i64::from(key2.row)).abs() == 2 && key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb && key1.finger != key2.finger
     {
         return true;
     }
