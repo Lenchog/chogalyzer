@@ -10,7 +10,7 @@ fn main() -> std::io::Result<()> {
 fn slice_times_two(bencher: Bencher, len: usize) {
     let mut v = vec![0.0_f64; len];
     bencher.bench(|| {
-        stats::analyze();
+        // stats::analyze();
         black_box(&mut v);
     });
 }
