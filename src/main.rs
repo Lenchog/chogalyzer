@@ -121,9 +121,9 @@ fn main() {
         "analyze" => output::print_stats(stats, layout_raw, &magic_rules, args.layout.clone().strip_suffix(".txt").unwrap().to_string()),
         "generate" => { 
             let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, args.magic_rules, args.cooling);
-            output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2, layout.0[10..20].iter().collect());
-            /* for magic_rules in 1..14 {
-                let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, magic_rules as usize);
+            output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2, layout.0[10..15].iter().collect());
+            /* for magic_rules in 1..20 {
+                let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, magic_rules as usize, args.cooling);
                 println!("{} Magic rules: {}", magic_rules, layout.1);
                 //output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2);
             } */

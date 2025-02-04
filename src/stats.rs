@@ -164,6 +164,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> i64 {
         red: {}
     ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 7, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
     score
+    //-stats.sfb
 }
 
 fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {

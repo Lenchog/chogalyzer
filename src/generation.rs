@@ -40,7 +40,11 @@ fn generate(layout_raw: [char; 32], corpus: &String, max_iterations: u64, multib
     while iterations < max_iterations {
         iterations += 1;
         layout = attempt_swap(false, layout.0, layout.2, corpus, layout.1.clone(), layout.1.bad_bigrams, temparature);
-        layout = attempt_swap(true, layout.0, layout.2, corpus, layout.1.clone(), layout.1.bad_bigrams, temparature);
+        //dbg!(&layout.1.bad_bigrams);
+        if !layout.1.bad_bigrams.is_empty() {
+            layout = attempt_swap(true, layout.0, layout.2, corpus, layout.1.clone(), layout.1.bad_bigrams, temparature);
+        }
+        else {println!("perfection achieved baby!")};
         bar.inc(1);
         temparature *= cooling_rate;
     }
@@ -101,15 +105,11 @@ fn compare_layouts(layouts: [([char; 32], i64, Vec<String>); THREADS]) -> ([char
 
 fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: Vec<String>) -> Vec<String> {
     let mut rng = thread_rng();
-    let mut random_rule = bad_bigrams.choose(&mut rng).unwrap().to_string();
-    let mut valid = false;
-    while !valid {
-        valid = true;
-        for rule in &magic_rules {
-            if !rule.is_empty() && random_rule.chars().next().unwrap() == rule.chars().next().unwrap() {
-                random_rule = bad_bigrams.choose(&mut rng).unwrap().to_string();
-                valid = false;
-            }
+    let random_rule = bad_bigrams.choose(&mut rng).unwrap().to_string();
+    for ref mut rule in &magic_rules {
+        if !rule.is_empty() && random_rule.chars().next().unwrap() == rule.chars().next().unwrap() {
+            *rule = &random_rule;
+            return magic_rules;
         }
     }
     let random_pos: usize = rng.gen_range(0..magic_rules.len());
