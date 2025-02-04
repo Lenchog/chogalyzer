@@ -12,7 +12,7 @@ pub fn bigram_stats(key1: &Key, key2: &Key, command: &String, mut stats: Stats, 
     if sf(key1, key2) {
         stats.sfb += 1;
         let distance: i64 = (key1.row - key2.row).into();
-        stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs() as i64;
+        stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
         bad_bigram = true;
         if command == "sfb" {
             insert_bigram = true;
@@ -56,7 +56,7 @@ pub fn skipgram_stats(
     stats.skipgrams += 1;
     if sf(key1, key2) {
         let distance: i64 = (key1.row - key2.row).into();
-        stats.fspeed += distance.abs() as i64 * finger_weights[&key1.finger] as i64;
+        stats.fspeed += distance.abs() * finger_weights[&key1.finger];
         stats.sfs += 1;
         if command == "sfs" {
             insert_ngram = true;
