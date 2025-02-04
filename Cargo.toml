@@ -10,7 +10,6 @@ indicatif = "0.17.9"
 rand = "0.8.5"
 shuffle = "0.1.7"
 tabled = "0.17.0"
-chogalyzer = { path = "./" }
 
 [profile.release]
 codegen-units = 1
