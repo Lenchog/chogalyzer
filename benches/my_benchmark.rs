@@ -1,5 +1,5 @@
-use diol::prelude::*;
 use chogalyzer::*;
+use diol::prelude::*;
 
 fn main() -> std::io::Result<()> {
     let mut bench = Bench::new(BenchConfig::from_args()?);

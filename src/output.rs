@@ -1,7 +1,8 @@
 use crate::Stats;
-use tabled::{col, builder::Builder, settings::Style};
+use tabled::{builder::Builder, col, settings::Style};
 
-pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
+pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String) {
+    #![allow(clippy::cast_precision_loss)]
     let min_range = 0;
     let max_range = 10;
     let mut builder = Builder::default();
@@ -17,13 +18,23 @@ pub fn print_ngrams(vec: Vec<([char; 3], u32)>, ngrams: u32, title: String) {
     println!("{table}");
 }
 
-pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, layout_name: String) {
-    let layout_rows: [String; 3] = [layout[0..10].iter().collect(), layout[10..20].iter().collect(), layout[20..30].iter().collect()];
+pub fn print_stats(
+    stats: &Stats,
+    layout: [char; 32],
+    magic_rules: &Vec<String>,
+    layout_name: &str,
+) {
+    #![allow(clippy::cast_precision_loss)]
+    let layout_rows: [String; 3] = [
+        layout[0..10].iter().collect(),
+        layout[10..20].iter().collect(),
+        layout[20..30].iter().collect(),
+    ];
     let mut layout_builder = Builder::default();
 
     layout_builder.push_record(["Layout"]);
-    for row in layout_rows { 
-        let mut row_format: String = Default::default();
+    for row in layout_rows {
+        let mut row_format: String = String::default();
         for char in row.chars() {
             row_format.push(char);
             row_format.push(' ');
@@ -31,7 +42,10 @@ pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, 
         row_format.insert(10, ' ');
         layout_builder.push_record([&row_format]);
     }
-    layout_builder.push_record([("      ".to_owned() + &layout[30].to_string() + "      " + &layout[31].to_string())]);
+    layout_builder.push_record([("      ".to_owned()
+        + &layout[30].to_string()
+        + "      "
+        + &layout[31].to_string())]);
 
     for rule in magic_rules {
         layout_builder.push_record([rule]);
@@ -53,10 +67,15 @@ pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, 
     let rollpercent = (stats.inroll + stats.outroll) as f32 * 100.0 / stats.trigrams as f32;
     let inthreerollpercent = stats.inthreeroll as f32 * 100.0 / stats.trigrams as f32;
     let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.trigrams as f32;
-    let threerollpercent = (stats.inthreeroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
-    let inrolltalpercent = (stats.inroll + stats.inthreeroll) as f32 * 100.0 / stats.trigrams as f32;
-    let outrolltalpercent = (stats.outroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
-    let rolltalpercent = (stats.inroll + stats.outroll + stats.inthreeroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+    let threerollpercent =
+        (stats.inthreeroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+    let inrolltalpercent =
+        (stats.inroll + stats.inthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+    let outrolltalpercent =
+        (stats.outroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+    let rolltalpercent =
+        (stats.inroll + stats.outroll + stats.inthreeroll + stats.outthreeroll) as f32 * 100.0
+            / stats.trigrams as f32;
     let weakredpercent = stats.weak_red as f32 * 100.0 / stats.trigrams as f32;
     let redpercent = (stats.red + stats.weak_red) as f32 * 100.0 / stats.trigrams as f32;
 
@@ -81,9 +100,24 @@ pub fn print_stats(stats: Stats, layout: [char; 32], magic_rules: &Vec<String>, 
 
     let mut roll = Builder::default();
     roll.push_record(["", "Inwards", "Outwards", "Total"]);
-    roll.push_record(["2", &inrollpercent.to_string(), &outrollpercent.to_string(), &rollpercent.to_string()]);
-    roll.push_record(["3", &inthreerollpercent.to_string(), &outthreerollpercent.to_string(), &threerollpercent.to_string()]);
-    roll.push_record(["Total", &inrolltalpercent.to_string(), &outrolltalpercent.to_string(), &rolltalpercent.to_string()]);
+    roll.push_record([
+        "2",
+        &inrollpercent.to_string(),
+        &outrollpercent.to_string(),
+        &rollpercent.to_string(),
+    ]);
+    roll.push_record([
+        "3",
+        &inthreerollpercent.to_string(),
+        &outthreerollpercent.to_string(),
+        &threerollpercent.to_string(),
+    ]);
+    roll.push_record([
+        "Total",
+        &inrolltalpercent.to_string(),
+        &outrolltalpercent.to_string(),
+        &rolltalpercent.to_string(),
+    ]);
     let mut roll_table = roll.build();
     roll_table.with(Style::sharp());
 

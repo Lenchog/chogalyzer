@@ -1,14 +1,15 @@
 mod bigram_stats;
 mod trigram_stats;
 
-use crate::{Finger, Key, Stats, INCLUDE_SPACE, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
+use crate::{Finger, Key, Stats, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use ahash::AHashMap;
 
-#[must_use] pub fn analyze(
+#[must_use]
+pub fn analyze(
     mut corpus: String,
     layout_letters: [char; 32],
     command: &String,
-    magic_rules: Vec <String>
+    magic_rules: Vec<String>,
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
@@ -19,12 +20,14 @@ use ahash::AHashMap;
         (Finger::Ring, 28),
         (Finger::Middle, 21),
         (Finger::Index, 18),
-        (Finger::Thumb, 50)
+        (Finger::Thumb, 50),
     ]);
 
     for rule in magic_rules {
         if !rule.is_empty() {
-            corpus = corpus.replace(&rule, &(rule.chars().next().unwrap().to_string() + "*"));
+            if let Some(v) = rule.chars().next() {
+                corpus = corpus.replace(&rule, &(v.to_string() + "*"));
+            }
         }
     }
 
@@ -33,58 +36,43 @@ use ahash::AHashMap;
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
+        let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats, &finger_weights);
         *char_freq.entry(letter).or_insert(0) += 1;
-
-        if INCLUDE_SPACE || (previous_letter != '⎵' && letter != '⎵')
-        {
-            let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats, &finger_weights);
-            stats = bigram.0;
-            if bigram.1 {
-                *stats.ngram_table
-                    .entry([previous_letter, letter, ' '])
-                    .or_insert(0) += 1;
-            }
-            if bigram.2 {
-                stats.bad_bigrams.push(format!("{previous_letter}{letter}"));
-            }
+        stats = bigram.0;
+        if bigram.1 {
+            *stats
+                .ngram_table
+                .entry([previous_letter, letter, ' '])
+                .or_insert(0) += 1;
         }
-
-        if INCLUDE_SPACE || (skip_previous_letter != '⎵' && letter != '⎵')
-        {
-            let skipgram = bigram_stats::skipgram_stats(
-                skip_previous_key,
-                key,
-                epic_previous_key,
-                command,
-                stats,
-                &finger_weights
-            );
-            stats = skipgram.0;
-            if skipgram.1 {
-                *stats.ngram_table
-                    .entry([skip_previous_letter, letter, ' '])
-                    .or_insert(0) += 1;
-            }
+        if bigram.2 {
+            stats.bad_bigrams.push(format!("{previous_letter}{letter}"));
         }
-
-        if INCLUDE_SPACE|| (skip_previous_letter != '⎵' && previous_letter != '⎵' && letter != '⎵') 
-        {
-            let trigram = trigram_stats::trigram_stats(
-                skip_previous_key,
-                previous_key,
-                key,
-                command,
-                stats,
-            );
-            stats = trigram.0;
-            stats.trigrams += 1;
-            if trigram.1 {
-                *stats.ngram_table
-                    .entry([skip_previous_letter, previous_letter, letter])
-                    .or_insert(0) += 1;
-            }
+        let skipgram = bigram_stats::skipgram_stats(
+            skip_previous_key,
+            key,
+            epic_previous_key,
+            command,
+            stats,
+            &finger_weights,
+        );
+        stats = skipgram.0;
+        if skipgram.1 {
+            *stats
+                .ngram_table
+                .entry([skip_previous_letter, letter, ' '])
+                .or_insert(0) += 1;
         }
-
+        let trigram =
+            trigram_stats::trigram_stats(skip_previous_key, previous_key, key, command, stats);
+        stats = trigram.0;
+        stats.trigrams += 1;
+        if trigram.1 {
+            *stats
+                .ngram_table
+                .entry([skip_previous_letter, previous_letter, letter])
+                .or_insert(0) += 1;
+        }
         epic_previous_letter = letter;
         skip_previous_letter = previous_letter;
         previous_letter = letter;
@@ -101,11 +89,11 @@ use ahash::AHashMap;
     ];
     for i in 0..layout_letters.len() {
         if char_freq.contains_key(&layout_letters[i]) {
-            stats.heatmap += i64::from(weighting[i] * char_freq[&layout_letters[i]]) ;
+            stats.heatmap += i64::from(weighting[i] * char_freq[&layout_letters[i]]);
         }
     }
     let weights = Stats {
-        score: 0,
+        score: 0.0,
         heatmap: -100,
         fspeed: -100,
         sfb: -200,
@@ -133,21 +121,22 @@ use ahash::AHashMap;
     stats
 }
 
-#[must_use] pub fn score(stats: &Stats, weighting: &Stats) -> i64 {
+#[must_use]
+pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     let mut score = 0;
     score += stats.fspeed * weighting.fspeed / 7;
     score += stats.heatmap * weighting.heatmap / 100;
-    score += stats.lsb * weighting.lsb ;
-    score += stats.lss * weighting.lss ;
-    score += stats.fsb * weighting.fsb ;
-    score += stats.fss * weighting.fss ;
-    score += stats.inroll * weighting.inroll ;
-    score += stats.inthreeroll * weighting.inthreeroll ;
-    score += stats.outroll * weighting.outroll ;
-    score += stats.alt * weighting.alt ;
-    score += stats.outthreeroll * weighting.outthreeroll ;
-    score += stats.weak_red * weighting.weak_red ;
-    score += stats.red * weighting.red ;
+    score += stats.lsb * weighting.lsb;
+    score += stats.lss * weighting.lss;
+    score += stats.fsb * weighting.fsb;
+    score += stats.fss * weighting.fss;
+    score += stats.inroll * weighting.inroll;
+    score += stats.inthreeroll * weighting.inthreeroll;
+    score += stats.outroll * weighting.outroll;
+    score += stats.alt * weighting.alt;
+    score += stats.outthreeroll * weighting.outthreeroll;
+    score += stats.weak_red * weighting.weak_red;
+    score += stats.red * weighting.red;
     /* println!("
         score: {}
         heatmap: {}
@@ -163,7 +152,7 @@ use ahash::AHashMap;
         weak red: {}
         red: {}
     ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 7, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
-    score
+    score as f64
     //-stats.sfb
 }
 

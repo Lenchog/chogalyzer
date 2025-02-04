@@ -23,7 +23,7 @@ enum Finger {
 
 #[derive(Default, Debug, Clone)]
 pub struct Stats {
-    score: i64,
+    score: f64,
     fspeed: i64,
     sfb: i64,
     sfr: i64,
@@ -50,4 +50,3 @@ pub struct Stats {
 
 const INCLUDE_THUMB_ALT: bool = true;
 const INCLUDE_THUMB_ROLL: bool = true;
-const INCLUDE_SPACE: bool = true;
