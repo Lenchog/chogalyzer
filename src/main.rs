@@ -30,6 +30,7 @@ fn main() {
     let layout_letters: String = fs::read_to_string(args.layout.clone())
         .expect("couldn't read layout")
         .replace(' ', "")
+        .replace(' ', "")
         .replace('_', "⎵")
         .chars()
         .collect();
@@ -45,8 +46,7 @@ fn main() {
     let corpus: String = fs::read_to_string(args.corpus)
         .expect("error reading corpus")
         .to_lowercase()
-        .replace('\n', "⎵")
-        .replace(' ', "⎵")
+        .replace(['\n', ' ', "  "], "⎵")
         .chars()
         .filter(|ch| layout_raw.contains(ch))
         .collect();
