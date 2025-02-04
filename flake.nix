@@ -141,7 +141,7 @@
                 nixfmt-rfc-style
                 statix
                 # rust
-                # gcc # required for clap
+                gcc # required for clap
                 toolchain
               ]
               ++ build-deps;
