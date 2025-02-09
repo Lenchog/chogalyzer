@@ -25,7 +25,7 @@ pub fn bigram_stats(
         }
     }
 
-    if sfr(key1, key2) {
+    if key1 == key2 {
         stats.sfr += 1;
         stats.fspeed += 3 * finger_weights[&key1.finger];
         bad_bigram = true;
@@ -106,7 +106,7 @@ pub fn skipgram_stats(
     (stats, insert_ngram)
 }
 fn sf(key1: &Key, key2: &Key) -> bool {
-    if key1.finger == key2.finger && key1.hand == key2.hand && key1.row != key2.row {
+    if key1.finger == key2.finger && key1.hand == key2.hand && key1 != key2 {
         return true;
     }
     false
@@ -138,13 +138,6 @@ fn fs(key1: &Key, key2: &Key) -> bool {
         && key2.finger != Finger::Thumb
         && key1.finger != key2.finger
     {
-        return true;
-    }
-    false
-}
-
-fn sfr(key1: &Key, key2: &Key) -> bool {
-    if key1 == key2 {
         return true;
     }
     false
