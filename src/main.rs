@@ -42,13 +42,23 @@ fn main() {
         .try_into()
         .expect("couldn't read layout");
 
-    let corpus: String = fs::read_to_string(args.corpus)
-        .expect("error reading corpus")
-        .to_lowercase()
-        .replace(['\n', ' '], "⎵")
-        .chars()
-        .filter(|ch| layout_raw.contains(ch))
-        .collect();
+let corpus: String = fs::read_to_string(&args.corpus)
+    .expect("error reading corpus")
+    .replace("\n\n", "")
+    .replace(' ', "⎵")
+    .chars()
+    .map(|ch| {
+        if ch.is_ascii_uppercase() {
+            // Replace uppercase letters with "*" followed by lowercase
+            format!("*{}", ch.to_ascii_lowercase()).chars().collect::<Vec<_>>()
+        } else {
+            // Leave other characters unchanged
+            vec![ch]
+        }
+    })
+    .flatten()
+    .filter(|ch| layout_raw.contains(ch))
+    .collect();
 
     let magic_rules_raw = layout_letters[38..].split('\n');
     let mut magic_rules: Vec<String> = Vec::default();
