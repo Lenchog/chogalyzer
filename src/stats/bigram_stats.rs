@@ -17,34 +17,33 @@ pub fn bigram_stats(
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
-        let distance: i64 = (key1.row - key2.row).into();
+        let distance: i64 = key1.row as i64 - key2.row as i64;
         stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
         bad_bigram = true;
         if command == "sfb" {
             insert_bigram = true;
         }
-    }
-
-    if key1 == key2 {
+    } else if key1 == key2 {
         stats.sfr += 1;
-        stats.fspeed += 3 * finger_weights[&key1.finger];
+        stats.fspeed += 2 * finger_weights[&key1.finger];
         bad_bigram = true;
         if command == "sfr" {
             insert_bigram = true;
         }
-    }
-    if ls(key1, key2) {
-        stats.lsb += 1;
-        bad_bigram = true;
-        if command == "lsb" {
-            insert_bigram = true;
+    } else {
+        if ls(key1, key2) {
+            stats.lsb += 1;
+            bad_bigram = true;
+            if command == "lsb" {
+                insert_bigram = true;
+            }
         }
-    }
-    if fs(key1, key2) {
-        stats.fsb += 1;
-        bad_bigram = true;
-        if command == "fsb" {
-            insert_bigram = true;
+        if fs(key1, key2) {
+            stats.fsb += 1;
+            bad_bigram = true;
+            if command == "fsb" {
+                insert_bigram = true;
+            }
         }
     }
     (stats, insert_bigram, bad_bigram)
@@ -61,23 +60,24 @@ pub fn skipgram_stats(
     let mut insert_ngram = false;
     stats.skipgrams += 1;
     if sf(key1, key2) {
-        let distance: i64 = (key1.row - key2.row).into();
+        let distance: i64 = key1.row as i64 - key2.row as i64;
         stats.fspeed += distance.abs() * finger_weights[&key1.finger];
         stats.sfs += 1;
         if command == "sfs" {
             insert_ngram = true;
         }
-    }
-    if ls(key1, key2) {
-        stats.lss += 1;
-        if command == "lss" {
-            insert_ngram = true;
+    } else {
+        if ls(key1, key2) {
+            stats.lss += 1;
+            if command == "lss" {
+                insert_ngram = true;
+            }
         }
-    }
-    if fs(key1, key2) {
-        stats.fss += 1;
-        if command == "fss" {
-            insert_ngram = true;
+        if fs(key1, key2) {
+            stats.fss += 1;
+            if command == "fss" {
+                insert_ngram = true;
+            }
         }
     }
 

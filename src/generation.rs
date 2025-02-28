@@ -109,7 +109,7 @@ fn generate(
     (layout.0, layout.1.score, layout.2)
 }
 
-fn attempt_swap(
+pub fn attempt_swap(
     do_magic: bool,
     layout: [char; 32],
     magic: Vec<String>,
