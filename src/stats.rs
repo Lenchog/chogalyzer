@@ -1,4 +1,4 @@
-mod bigram_stats;
+pub mod bigram_stats;
 mod trigram_stats;
 
 use crate::{Finger, Key, Stats, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
@@ -46,7 +46,10 @@ pub fn analyze(
                 .or_insert(0) += 1;
         }
         if bigram.2 {
-            stats.bad_bigrams.push(format!("{previous_letter}{letter}"));
+            *stats
+                .bad_bigrams
+                .entry([previous_letter, letter, ' '])
+                .or_insert(0) += bigram.3;
         }
         let skipgram = bigram_stats::skipgram_stats(
             skip_previous_key,
@@ -115,7 +118,7 @@ pub fn analyze(
         skipgrams: 0,
         trigrams: 0,
         ngram_table: AHashMap::default(),
-        bad_bigrams: vec![],
+        bad_bigrams: AHashMap::default(),
     };
     stats.score = score(&stats, &weights);
     stats
@@ -156,7 +159,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     //-stats.sfb
 }
 
-fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {
+pub fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {
     #[rustfmt::skip]
     return AHashMap::from([
         // LH top row

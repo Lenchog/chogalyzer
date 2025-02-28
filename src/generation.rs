@@ -1,4 +1,5 @@
-use crate::{stats, Stats};
+use crate::{stats, stats::{bigram_stats, layout_raw_to_table}, Stats, Finger};
+use ahash::AHashMap;
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
 use rand::prelude::*;
@@ -81,28 +82,13 @@ fn generate(
     while iterations < max_iterations {
         iterations += 1;
         layout = attempt_swap(
-            false,
             layout.0,
-            layout.2,
             corpus,
             layout.1.clone(),
             &layout.1.bad_bigrams,
             temparature,
+            magic_rules
         );
-        //dbg!(&layout.1.bad_bigrams);
-        if layout.1.bad_bigrams.is_empty() {
-            println!("perfection achieved baby!");
-        } else {
-            layout = attempt_swap(
-                true,
-                layout.0,
-                layout.2,
-                corpus,
-                layout.1.clone(),
-                &layout.1.bad_bigrams,
-                temparature,
-            );
-        }
         bar.inc(1);
         temparature *= cooling_rate;
     }
@@ -110,39 +96,37 @@ fn generate(
 }
 
 pub fn attempt_swap(
-    do_magic: bool,
     layout: [char; 32],
-    magic: Vec<String>,
     corpus: &String,
     old_stats: Stats,
-    bad_bigrams: &[String],
+    bad_bigrams: &AHashMap<[char; 3], u32>,
     temparature: f64,
+    magic_rules: usize
 ) -> ([char; 32], Stats, Vec<String>) {
     let mut rng = rand::thread_rng();
     let letter1 = rng.gen_range(0..layout.len());
     let letter2 = rng.gen_range(0..layout.len());
 
     let mut new_layout = layout;
-    let mut new_magic = magic.clone();
-    if do_magic {
-        new_magic = swap_magic(new_magic, bad_bigrams);
-    } else if rng.gen_range(0..10) > 3 {
+    if rng.gen_range(0..10) > 3 {
         new_layout.swap(letter1, letter2);
     } else {
         new_layout = column_swap(new_layout, rng.gen_range(1..10), rng.gen_range(1..10));
     }
 
+    let magic = get_magic_rules(&corpus.to_string(), new_layout, &"generate".to_string(), magic_rules);
+
     let new_stats = stats::analyze(
         corpus.to_string(),
         new_layout,
         &"generate".to_string(),
-        new_magic.clone().clone(),
+        magic.clone(),
     );
 
     if new_stats.score > old_stats.score
         || annealing_func(old_stats.score, new_stats.score, temparature)
     {
-        (new_layout, new_stats, new_magic)
+        (new_layout, new_stats, magic)
     } else {
         (layout, old_stats, magic)
     }
@@ -162,8 +146,8 @@ fn compare_layouts(
     layouts[best_layout].clone()
 }
 
-fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: &[String]) -> Vec<String> {
-    let mut rng = thread_rng();
+fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: &AHashMap<[char; 3], u32>) -> Vec<String> {
+    /* let mut rng = thread_rng();
     let random_rule = bad_bigrams.choose(&mut rng).unwrap().to_string();
     for ref mut rule in &magic_rules {
         if !rule.is_empty() && random_rule.chars().next().unwrap() == rule.chars().next().unwrap() {
@@ -173,7 +157,8 @@ fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: &[String]) -> Vec<Strin
     }
     let random_pos: usize = rng.gen_range(0..magic_rules.len());
     magic_rules[random_pos] = random_rule;
-    magic_rules
+    magic_rules */
+    todo!()
 }
 fn standard_deviation(stat_array: &[Stats; 10]) -> f64 {
     let mut sum = 0.0;
@@ -200,4 +185,39 @@ fn column_swap(mut layout: [char; 32], col1: usize, col2: usize) -> [char; 32] {
     layout.swap(col1 + 10, col2 + 10);
     layout.swap(col1 + 20, col2 + 20);
     layout
+}
+
+fn get_magic_rules(corpus: &String, layout_letters: [char; 32], command: &String, magic_rules: usize) -> Vec<String> {
+    let layout = layout_raw_to_table(&layout_letters);
+    let mut previous_letter= '⎵';
+    let mut stats: Stats = Stats::default();
+    let mut char_freq: AHashMap<char, u32> = AHashMap::default();
+    let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
+        (Finger::Pinky, 66),
+        (Finger::Ring, 28),
+        (Finger::Middle, 21),
+        (Finger::Index, 18),
+        (Finger::Thumb, 50),
+    ]);
+
+    for letter in corpus.chars() {
+        let key = &layout[&letter];
+        let previous_key = &layout[&previous_letter];
+        let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats, &finger_weights);
+        stats = bigram.0;
+        if bigram.2 {
+            *stats
+                .bad_bigrams
+                .entry([previous_letter, letter, ' '])
+                .or_insert(0) += bigram.3;
+        }
+        previous_letter = letter;
+    }
+
+    let mut sorted_vec: Vec<([char; 3], u32)> = stats.bad_bigrams.into_iter().collect();
+    sorted_vec.sort_by(|a, b| a.1.cmp(&b.1));
+
+    // Extract only the keys ([char; 3])
+    let sorted_keys: Vec<String> = sorted_vec.into_iter().take(magic_rules).map(|(key, _)| key.iter().collect::<String>()).collect();
+    return sorted_keys;
 }

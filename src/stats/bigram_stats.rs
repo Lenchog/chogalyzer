@@ -1,3 +1,5 @@
+use std::cmp;
+
 use ahash::AHashMap;
 
 use crate::Finger;
@@ -10,15 +12,17 @@ pub fn bigram_stats(
     command: &String,
     mut stats: Stats,
     finger_weights: &AHashMap<Finger, i64>,
-) -> (Stats, bool, bool) {
+) -> (Stats, bool, bool, u32) {
     let mut insert_bigram = false;
     let mut bad_bigram = false;
+    let mut bigram_weight = 0;
 
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
         let distance: i64 = key1.row as i64 - key2.row as i64;
         stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
+        bigram_weight += 5 * finger_weights[&key1.finger] * distance.abs();
         bad_bigram = true;
         if command == "sfb" {
             insert_bigram = true;
@@ -26,6 +30,7 @@ pub fn bigram_stats(
     } else if key1 == key2 {
         stats.sfr += 1;
         stats.fspeed += 2 * finger_weights[&key1.finger];
+        bigram_weight += 2 * finger_weights[&key1.finger];
         bad_bigram = true;
         if command == "sfr" {
             insert_bigram = true;
@@ -34,6 +39,7 @@ pub fn bigram_stats(
         if ls(key1, key2) {
             stats.lsb += 1;
             bad_bigram = true;
+            bigram_weight += 1 * cmp::max(finger_weights[&key1.finger], finger_weights[&key2.finger]);
             if command == "lsb" {
                 insert_bigram = true;
             }
@@ -41,12 +47,13 @@ pub fn bigram_stats(
         if fs(key1, key2) {
             stats.fsb += 1;
             bad_bigram = true;
+            bigram_weight += 3 * cmp::max(finger_weights[&key1.finger], finger_weights[&key2.finger]);
             if command == "fsb" {
                 insert_bigram = true;
             }
         }
     }
-    (stats, insert_bigram, bad_bigram)
+    (stats, insert_bigram, bad_bigram, bigram_weight.try_into().unwrap())
 }
 
 pub fn skipgram_stats(
