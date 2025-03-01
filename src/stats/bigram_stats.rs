@@ -1,5 +1,3 @@
-use std::cmp;
-
 use ahash::AHashMap;
 
 use crate::Finger;

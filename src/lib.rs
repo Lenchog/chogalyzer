@@ -13,7 +13,7 @@ pub struct Key {
 }
 
 #[derive(Eq, Hash, PartialEq, PartialOrd)]
-enum Finger {
+pub enum Finger {
     Thumb,
     Index,
     Middle,

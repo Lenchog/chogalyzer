@@ -1,5 +1,4 @@
 use clap::Parser;
-use std::cmp;
 use std::fs;
 
 use chogalyzer::{generation, output, stats};

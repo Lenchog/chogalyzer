@@ -3,7 +3,7 @@ use crate::{
     stats::{bigram_stats, layout_raw_to_table},
     Finger, Stats,
 };
-use ahash::AHashMap;
+use ahash::{AHashMap, AHashSet};
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
 use rand::prelude::*;
@@ -90,7 +90,6 @@ fn generate(
             corpus,
             layout.1.clone(),
             layout.2,
-            &layout.1.bad_bigrams,
             temparature,
             magic_rules,
         );
@@ -105,7 +104,6 @@ pub fn attempt_swap(
     corpus: &String,
     old_stats: Stats,
     old_magic: Vec<String>,
-    bad_bigrams: &AHashMap<[char; 2], u32>,
     temparature: f64,
     magic_rules: usize,
 ) -> ([char; 32], Stats, Vec<String>) {
@@ -193,7 +191,6 @@ fn get_magic_rules(
     let layout = layout_raw_to_table(&layout_letters);
     let mut previous_letter = '⎵';
     let mut stats: Stats = Stats::default();
-    let mut char_freq: AHashMap<char, u32> = AHashMap::default();
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
         (Finger::Pinky, 66),
         (Finger::Ring, 28),
@@ -215,8 +212,25 @@ fn get_magic_rules(
         }
         previous_letter = letter;
     }
-
     let mut sorted_vec: Vec<([char; 2], u32)> = stats.bad_bigrams.into_iter().collect();
+
+    // Sort in descending order based on frequency
+    sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
+
+    let mut used_first_letters: AHashSet<char> = AHashSet::new();
+    let mut sorted_keys: Vec<String> = Vec::new();
+
+    // Iterate and select only unique first-letter bigrams
+    for (key, _) in sorted_vec {
+        if !used_first_letters.contains(&key[0]) {
+            sorted_keys.push(key.iter().collect::<String>());
+            used_first_letters.insert(key[0]); // Mark the first letter as used
+        }
+        if sorted_keys.len() == magic_rules {
+            break;
+        }
+    }
+    /* let mut sorted_vec: Vec<([char; 2], u32)> = stats.bad_bigrams.into_iter().collect();
     sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     // Extract only the keys ([char; 2])
@@ -224,6 +238,6 @@ fn get_magic_rules(
         .into_iter()
         .take(magic_rules)
         .map(|(key, _)| key.iter().collect::<String>())
-        .collect();
-    return sorted_keys;
+        .collect(); */
+    sorted_keys
 }
