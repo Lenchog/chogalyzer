@@ -49,7 +49,7 @@ pub fn bigram_stats(
                 insert_bigram = true;
             }
         }
-        if fs(key1, key2) {
+        if scissor(key1, key2) == 2 {
             stats.fsb += 1;
             bad_bigram = true;
             bigram_weight += 90;
@@ -90,7 +90,7 @@ pub fn skipgram_stats(
                 insert_ngram = true;
             }
         }
-        if fs(key1, key2) {
+        if scissor(key1, key2) == 2 {
             stats.fss += 1;
             if command == "fss" {
                 insert_ngram = true;
@@ -112,7 +112,7 @@ pub fn skipgram_stats(
                 insert_ngram = true;
             }
         }
-        if fs(key2, epic_key1) && epic_key1 != key2 {
+        if scissor(key2, epic_key1) == 2 && epic_key1 != key2 {
             stats.fss += 1;
             if command == "fss" {
                 insert_ngram = true;
@@ -140,22 +140,16 @@ fn ls(key1: &Key, key2: &Key) -> bool {
     false
 }
 
-fn fs(key1: &Key, key2: &Key) -> bool {
-    /* if (((key1.finger == Finger::Ring || key1.finger == Finger::Middle)
-    && (key2.finger == Finger::Pinky || key2.finger == Finger::Index)
-    && (key1.row == 2 && key2.row == 0 || key1.row == 0 && key2.row == 2))
-    || ((key2.finger == Finger::Ring || key2.finger == Finger::Middle)
-        && (key1.finger == Finger::Pinky || key1.finger == Finger::Index)
-        && key2.row == 0
-        && key1.row == 2))
-    && key1.hand == key2.hand */
-    if (i64::from(key1.row) - i64::from(key2.row)).abs() == 2
-        && key1.hand == key2.hand
-        && key1.finger != Finger::Thumb
-        && key2.finger != Finger::Thumb
+fn scissor(key1: &Key, key2: &Key) -> u8 {
+    let distance: u8 = (i64::from(key1.row) - i64::from(key2.row)).abs().try_into().expect("invalid distance");
+    if key1.hand == key2.hand
         && key1.finger != key2.finger
+        && (((key1.finger == Finger::Pinky || key1.finger == Finger::Index)
+            && (key2.finger == Finger::Middle || key2.finger == Finger::Ring))
+        || ((key2.finger == Finger::Pinky || key2.finger == Finger::Index)
+            && (key1.finger == Finger::Middle || key1.finger == Finger::Ring)))
     {
-        return true;
+        return distance;
     }
-    false
+    0
 }
