@@ -107,6 +107,7 @@ fn main() {
         "lsbs" => output::print_ngrams(&ngram_vec, stats.bigrams, "LSB".to_string()),
         "lss" => output::print_ngrams(&ngram_vec, stats.skipgrams, "LSS".to_string()),
         "fsb" => output::print_ngrams(&ngram_vec, stats.bigrams, "FSB".to_string()),
+        "hsb" => output::print_ngrams(&ngram_vec, stats.bigrams, "HSB".to_string()),
         "fss" => output::print_ngrams(&ngram_vec, stats.skipgrams, "FSS".to_string()),
         "alt" => output::print_ngrams(&ngram_vec, stats.trigrams, "Alt".to_string()),
         "inroll" => output::print_ngrams(&ngram_vec, stats.trigrams, "Inroll".to_string()),

@@ -32,6 +32,8 @@ pub struct Stats {
     lss: i64,
     fsb: i64,
     fss: i64,
+    hsb: i64,
+    hss: i64,
     inroll: i64,
     outroll: i64,
     alt: i64,

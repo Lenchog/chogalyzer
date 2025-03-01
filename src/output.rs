@@ -59,6 +59,8 @@ pub fn print_stats(
     let sfspercent = stats.sfs as f32 * 100.0 / stats.skipgrams as f32;
     let lsbpercent = stats.lsb as f32 * 100.0 / stats.bigrams as f32;
     let lsspercent = stats.lss as f32 * 100.0 / stats.skipgrams as f32;
+    let hsbpercent = stats.hsb as f32 * 100.0 / stats.bigrams as f32;
+    let hsspercent = stats.hss as f32 * 100.0 / stats.skipgrams as f32;
     let fsbpercent = stats.fsb as f32 * 100.0 / stats.bigrams as f32;
     let fsspercent = stats.fss as f32 * 100.0 / stats.skipgrams as f32;
     let altpercent = stats.alt as f32 * 100.0 / stats.trigrams as f32;
@@ -95,6 +97,7 @@ pub fn print_stats(
     bigram.push_record(["SF", &sfbpercent.to_string(), &sfspercent.to_string()]);
     bigram.push_record(["LS", &lsbpercent.to_string(), &lsspercent.to_string()]);
     bigram.push_record(["FS", &fsbpercent.to_string(), &fsspercent.to_string()]);
+    bigram.push_record(["HS", &hsbpercent.to_string(), &hsspercent.to_string()]);
     let mut bigram_table = bigram.build();
     bigram_table.with(Style::sharp());
 

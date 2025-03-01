@@ -49,7 +49,15 @@ pub fn bigram_stats(
                 insert_bigram = true;
             }
         }
-        if scissor(key1, key2) == 2 {
+        if scissor(key1, key2) == 1 {
+            stats.hsb += 1;
+            bad_bigram = true;
+            bigram_weight += 30;
+            if command == "hsb" {
+                insert_bigram = true;
+            }
+        }
+        else if scissor(key1, key2) == 2 {
             stats.fsb += 1;
             bad_bigram = true;
             bigram_weight += 90;
@@ -90,7 +98,13 @@ pub fn skipgram_stats(
                 insert_ngram = true;
             }
         }
-        if scissor(key1, key2) == 2 {
+        if scissor(key1, key2) == 1 {
+            stats.hss += 1;
+            if command == "hss" {
+                insert_ngram = true;
+            }
+        }
+        else if scissor(key1, key2) == 2 {
             stats.fss += 1;
             if command == "fss" {
                 insert_ngram = true;
