@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::fs;
 use std::cmp;
+use std::fs;
 
 use chogalyzer::{generation, output, stats};
 
@@ -43,23 +43,25 @@ fn main() {
         .try_into()
         .expect("couldn't read layout");
 
-let corpus: String = fs::read_to_string(&args.corpus)
-    .expect("error reading corpus")
-    .replace("\n\n", "")
-    .replace(' ', "⎵")
-    .chars()
-    .map(|ch| {
-        if ch.is_ascii_uppercase() {
-            // Replace uppercase letters with "*" followed by lowercase
-            format!("*{}", ch.to_ascii_lowercase()).chars().collect::<Vec<_>>()
-        } else {
-            // Leave other characters unchanged
-            vec![ch]
-        }
-    })
-    .flatten()
-    .filter(|ch| layout_raw.contains(ch))
-    .collect();
+    let corpus: String = fs::read_to_string(&args.corpus)
+        .expect("error reading corpus")
+        .replace("\n\n", "")
+        .replace(' ', "⎵")
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_uppercase() {
+                // Replace uppercase letters with "*" followed by lowercase
+                format!("*{}", ch.to_ascii_lowercase())
+                    .chars()
+                    .collect::<Vec<_>>()
+            } else {
+                // Leave other characters unchanged
+                vec![ch]
+            }
+        })
+        .flatten()
+        .filter(|ch| layout_raw.contains(ch))
+        .collect();
 
     let magic_rules_raw = layout_letters[38..].split('\n');
     let mut magic_rules: Vec<String> = Vec::default();
@@ -68,12 +70,7 @@ let corpus: String = fs::read_to_string(&args.corpus)
         magic_rules.push(rule.to_string());
     }
 
-    let stats = stats::analyze(
-        corpus.clone(),
-        layout_raw,
-        &args.command,
-        &magic_rules,
-    );
+    let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, &magic_rules);
 
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));

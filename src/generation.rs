@@ -1,4 +1,8 @@
-use crate::{stats, stats::{bigram_stats, layout_raw_to_table}, Stats, Finger};
+use crate::{
+    stats,
+    stats::{bigram_stats, layout_raw_to_table},
+    Finger, Stats,
+};
 use ahash::AHashMap;
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
@@ -103,7 +107,7 @@ pub fn attempt_swap(
     old_magic: Vec<String>,
     bad_bigrams: &AHashMap<[char; 2], u32>,
     temparature: f64,
-    magic_rules: usize
+    magic_rules: usize,
 ) -> ([char; 32], Stats, Vec<String>) {
     let mut rng = rand::thread_rng();
     let letter1 = rng.gen_range(0..layout.len());
@@ -116,7 +120,12 @@ pub fn attempt_swap(
         new_layout = column_swap(new_layout, rng.gen_range(1..10), rng.gen_range(1..10));
     }
 
-    let magic = get_magic_rules(&corpus.to_string(), new_layout, &"generate".to_string(), magic_rules);
+    let magic = get_magic_rules(
+        &corpus.to_string(),
+        new_layout,
+        &"generate".to_string(),
+        magic_rules,
+    );
 
     let new_stats = stats::analyze(
         corpus.to_string(),
@@ -175,9 +184,14 @@ fn column_swap(mut layout: [char; 32], col1: usize, col2: usize) -> [char; 32] {
     layout
 }
 
-fn get_magic_rules(corpus: &String, layout_letters: [char; 32], command: &String, magic_rules: usize) -> Vec<String> {
+fn get_magic_rules(
+    corpus: &String,
+    layout_letters: [char; 32],
+    command: &String,
+    magic_rules: usize,
+) -> Vec<String> {
     let layout = layout_raw_to_table(&layout_letters);
-    let mut previous_letter= '⎵';
+    let mut previous_letter = '⎵';
     let mut stats: Stats = Stats::default();
     let mut char_freq: AHashMap<char, u32> = AHashMap::default();
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
@@ -206,6 +220,10 @@ fn get_magic_rules(corpus: &String, layout_letters: [char; 32], command: &String
     sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     // Extract only the keys ([char; 2])
-    let sorted_keys: Vec<String> = sorted_vec.into_iter().take(magic_rules).map(|(key, _)| key.iter().collect::<String>()).collect();
+    let sorted_keys: Vec<String> = sorted_vec
+        .into_iter()
+        .take(magic_rules)
+        .map(|(key, _)| key.iter().collect::<String>())
+        .collect();
     return sorted_keys;
 }

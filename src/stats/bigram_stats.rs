@@ -22,8 +22,11 @@ pub fn bigram_stats(
         stats.sfb += 1;
         let distance: i64 = if !(key1.lateral || key2.lateral) {
             key1.row as i64 - key2.row as i64
-        } else if key1.row == key2.row { 1 }
-            else { (((key1.row as i64 - key2.row as i64) * (key1.row as i64 - key2.row as i64) + 1) as f64).sqrt() as i64
+        } else if key1.row == key2.row {
+            1
+        } else {
+            (((key1.row as i64 - key2.row as i64) * (key1.row as i64 - key2.row as i64) + 1) as f64)
+                .sqrt() as i64
         };
         stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
         bigram_weight += 5 * finger_weights[&key1.finger] * distance.abs();
@@ -57,7 +60,12 @@ pub fn bigram_stats(
             }
         }
     }
-    (stats, insert_bigram, bad_bigram, bigram_weight.try_into().unwrap())
+    (
+        stats,
+        insert_bigram,
+        bad_bigram,
+        bigram_weight.try_into().unwrap(),
+    )
 }
 
 pub fn skipgram_stats(

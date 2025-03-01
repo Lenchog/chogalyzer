@@ -1,9 +1,9 @@
-use chogalyzer::*;
 use chogalyzer::generation::attempt_swap;
-use std::mem::swap;
+use chogalyzer::*;
+use diol::prelude::*;
 use std::env::args;
 use std::fs;
-use diol::prelude::*;
+use std::mem::swap;
 
 fn main() -> std::io::Result<()> {
     let mut bench = Bench::new(BenchConfig::from_args()?);
@@ -41,19 +41,37 @@ fn main() -> std::io::Result<()> {
         corpus.clone(),
         layout_raw,
         &"bench".to_string(),
-        magic_rules.clone(),
+        &magic_rules,
     );
 
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
     bench.register(swap_letters, layout);
-    bench.register(swap_letters, (layout);
+    bench.register(swap_letters, (layout));
     bench.run()?;
     Ok(())
 }
 
 fn swap_letters(bencher: Bencher, corpus: &String) {
     layout = "abcdefghijklmnopqrstuv,.';*⎵".shuffle();
-    old_stats = attempt_swap(do_magic, layout, magic, corpus, old_stats, bad_bigrams, temparature);
-    bencher.bench(|| attempt_swap(false, layout, Vec::default(), corpus, old_stats, bad_bigrams, temparature))
+    old_stats = attempt_swap(
+        do_magic,
+        layout,
+        magic,
+        corpus,
+        old_stats,
+        bad_bigrams,
+        temparature,
+    );
+    bencher.bench(|| {
+        attempt_swap(
+            false,
+            layout,
+            Vec::default(),
+            corpus,
+            old_stats,
+            bad_bigrams,
+            temparature,
+        )
+    })
 }
