@@ -59,7 +59,7 @@ fn generate(
         corpus.to_string(),
         layout.0,
         &"generate".to_string(),
-        layout.2.clone().clone(),
+        &layout.2,
     );
     let bar = ProgressBar::new(max_iterations);
     multibars.add(bar.clone());
@@ -73,7 +73,7 @@ fn generate(
             corpus.to_string(),
             layout.0,
             &"generate".to_string(),
-            layout.2.clone().clone(),
+            &layout.2,
         );
         *layout_stats = &layout.1.clone();
     }
@@ -85,9 +85,10 @@ fn generate(
             layout.0,
             corpus,
             layout.1.clone(),
+            layout.2,
             &layout.1.bad_bigrams,
             temparature,
-            magic_rules
+            magic_rules,
         );
         bar.inc(1);
         temparature *= cooling_rate;
@@ -99,7 +100,8 @@ pub fn attempt_swap(
     layout: [char; 32],
     corpus: &String,
     old_stats: Stats,
-    bad_bigrams: &AHashMap<[char; 3], u32>,
+    old_magic: Vec<String>,
+    bad_bigrams: &AHashMap<[char; 2], u32>,
     temparature: f64,
     magic_rules: usize
 ) -> ([char; 32], Stats, Vec<String>) {
@@ -120,7 +122,7 @@ pub fn attempt_swap(
         corpus.to_string(),
         new_layout,
         &"generate".to_string(),
-        magic.clone(),
+        &magic,
     );
 
     if new_stats.score > old_stats.score
@@ -128,7 +130,7 @@ pub fn attempt_swap(
     {
         (new_layout, new_stats, magic)
     } else {
-        (layout, old_stats, magic)
+        (layout, old_stats, old_magic)
     }
 }
 
@@ -146,20 +148,6 @@ fn compare_layouts(
     layouts[best_layout].clone()
 }
 
-fn swap_magic(mut magic_rules: Vec<String>, bad_bigrams: &AHashMap<[char; 3], u32>) -> Vec<String> {
-    /* let mut rng = thread_rng();
-    let random_rule = bad_bigrams.choose(&mut rng).unwrap().to_string();
-    for ref mut rule in &magic_rules {
-        if !rule.is_empty() && random_rule.chars().next().unwrap() == rule.chars().next().unwrap() {
-            *rule = &random_rule;
-            return magic_rules;
-        }
-    }
-    let random_pos: usize = rng.gen_range(0..magic_rules.len());
-    magic_rules[random_pos] = random_rule;
-    magic_rules */
-    todo!()
-}
 fn standard_deviation(stat_array: &[Stats; 10]) -> f64 {
     let mut sum = 0.0;
     for layout in stat_array {
@@ -208,16 +196,16 @@ fn get_magic_rules(corpus: &String, layout_letters: [char; 32], command: &String
         if bigram.2 {
             *stats
                 .bad_bigrams
-                .entry([previous_letter, letter, ' '])
+                .entry([previous_letter, letter])
                 .or_insert(0) += bigram.3;
         }
         previous_letter = letter;
     }
 
-    let mut sorted_vec: Vec<([char; 3], u32)> = stats.bad_bigrams.into_iter().collect();
-    sorted_vec.sort_by(|a, b| a.1.cmp(&b.1));
+    let mut sorted_vec: Vec<([char; 2], u32)> = stats.bad_bigrams.into_iter().collect();
+    sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
-    // Extract only the keys ([char; 3])
+    // Extract only the keys ([char; 2])
     let sorted_keys: Vec<String> = sorted_vec.into_iter().take(magic_rules).map(|(key, _)| key.iter().collect::<String>()).collect();
     return sorted_keys;
 }

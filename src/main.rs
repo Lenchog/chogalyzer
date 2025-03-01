@@ -72,7 +72,7 @@ let corpus: String = fs::read_to_string(&args.corpus)
         corpus.clone(),
         layout_raw,
         &args.command,
-        magic_rules.clone(),
+        &magic_rules,
     );
 
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
@@ -94,7 +94,7 @@ let corpus: String = fs::read_to_string(&args.corpus)
                 args.cooling,
             );
             output::print_stats(
-                &stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()),
+                &stats::analyze(corpus.clone(), layout.0, &args.command, &layout.2),
                 layout.0,
                 &layout.2,
                 layout.0[10..15].iter().collect::<String>().as_str(),

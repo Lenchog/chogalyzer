@@ -45,7 +45,7 @@ pub struct Stats {
     pub skipgrams: u32,
     pub trigrams: u32,
     pub ngram_table: AHashMap<[char; 3], u32>,
-    pub bad_bigrams: AHashMap<[char; 3], u32>,
+    pub bad_bigrams: AHashMap<[char; 2], u32>,
 }
 
 const INCLUDE_THUMB_ALT: bool = true;

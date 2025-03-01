@@ -9,7 +9,7 @@ pub fn analyze(
     mut corpus: String,
     layout_letters: [char; 32],
     command: &String,
-    magic_rules: Vec<String>,
+    magic_rules: &Vec<String>,
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
@@ -26,7 +26,7 @@ pub fn analyze(
     for rule in magic_rules {
         if !rule.is_empty() {
             if let Some(v) = rule.chars().next() {
-                corpus = corpus.replace(&rule, &(v.to_string() + "*"));
+                corpus = corpus.replace(rule, &(v.to_string() + "*"));
             }
         }
     }
@@ -48,7 +48,7 @@ pub fn analyze(
         if bigram.2 {
             *stats
                 .bad_bigrams
-                .entry([previous_letter, letter, ' '])
+                .entry([previous_letter, letter])
                 .or_insert(0) += bigram.3;
         }
         let skipgram = bigram_stats::skipgram_stats(

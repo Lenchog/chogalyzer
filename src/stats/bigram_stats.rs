@@ -20,7 +20,11 @@ pub fn bigram_stats(
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
-        let distance: i64 = key1.row as i64 - key2.row as i64;
+        let distance: i64 = if !(key1.lateral || key2.lateral) {
+            key1.row as i64 - key2.row as i64
+        } else if key1.row == key2.row { 1 }
+            else { (((key1.row as i64 - key2.row as i64) * (key1.row as i64 - key2.row as i64) + 1) as f64).sqrt() as i64
+        };
         stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
         bigram_weight += 5 * finger_weights[&key1.finger] * distance.abs();
         bad_bigram = true;
@@ -39,7 +43,7 @@ pub fn bigram_stats(
         if ls(key1, key2) {
             stats.lsb += 1;
             bad_bigram = true;
-            bigram_weight += 1 * cmp::max(finger_weights[&key1.finger], finger_weights[&key2.finger]);
+            bigram_weight += 30;
             if command == "lsb" {
                 insert_bigram = true;
             }
@@ -47,7 +51,7 @@ pub fn bigram_stats(
         if fs(key1, key2) {
             stats.fsb += 1;
             bad_bigram = true;
-            bigram_weight += 3 * cmp::max(finger_weights[&key1.finger], finger_weights[&key2.finger]);
+            bigram_weight += 90;
             if command == "fsb" {
                 insert_bigram = true;
             }
