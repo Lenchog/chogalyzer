@@ -1,5 +1,5 @@
 pub mod bigram_stats;
-mod trigram_stats;
+pub mod trigram_stats;
 
 use crate::{Finger, Key, Stats, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use ahash::AHashMap;

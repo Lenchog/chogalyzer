@@ -6,10 +6,10 @@ use ahash::AHashMap;
 
 #[derive(PartialEq)]
 pub struct Key {
-    hand: u8,
-    finger: Finger,
-    row: u8,
-    lateral: bool,
+    pub hand: u8,
+    pub finger: Finger,
+    pub row: u8,
+    pub lateral: bool,
 }
 
 #[derive(Eq, Hash, PartialEq, PartialOrd)]

@@ -5,7 +5,7 @@ use crate::INCLUDE_THUMB_ALT;
 use crate::INCLUDE_THUMB_ROLL;
 
 #[derive(Debug, Eq, Hash, PartialEq)]
-enum Trigram {
+pub enum Trigram {
     Inroll,
     Outroll,
     Alt,
@@ -16,7 +16,7 @@ enum Trigram {
     Other,
 }
 
-fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
+pub fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     if key2.hand != key1.hand
         && key2.hand != key3.hand
         && (INCLUDE_THUMB_ALT

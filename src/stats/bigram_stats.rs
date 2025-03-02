@@ -136,14 +136,14 @@ pub fn skipgram_stats(
 
     (stats, insert_ngram)
 }
-fn sf(key1: &Key, key2: &Key) -> bool {
+pub fn sf(key1: &Key, key2: &Key) -> bool {
     if key1.finger == key2.finger && key1.hand == key2.hand && key1 != key2 {
         return true;
     }
     false
 }
 
-fn ls(key1: &Key, key2: &Key) -> bool {
+pub fn ls(key1: &Key, key2: &Key) -> bool {
     if (key1.lateral || key2.lateral)
         && key1.hand == key2.hand
         && key1.finger != Finger::Thumb
@@ -154,7 +154,7 @@ fn ls(key1: &Key, key2: &Key) -> bool {
     false
 }
 
-fn scissor(key1: &Key, key2: &Key) -> u8 {
+pub fn scissor(key1: &Key, key2: &Key) -> u8 {
     let distance: u8 = (i64::from(key1.row) - i64::from(key2.row)).abs().try_into().expect("invalid distance");
     if key1.hand == key2.hand
         && key1.finger != key2.finger
