@@ -55,7 +55,7 @@ fn bench_bigram_stats(
         (Finger::Index, 18),
         (Finger::Thumb, 50),
     ]);
-    let stats = Stats::default();
+    let mut stats = Stats::default();
     let layout_letters: String = fs::read_to_string("whirl.txt")
         .expect("couldn't read layout")
         .replace([' ', ' '], "")
@@ -75,7 +75,7 @@ fn bench_bigram_stats(
     let key1 = &table[&letters.chars().next().unwrap()];
     let key2 = &table[&letters.chars().nth(1).unwrap()];
     bencher.bench(|| {
-        bigram_stats(&key1, &key2, command, stats.clone(), &finger_weights);
+        bigram_stats(&key1, &key2, command, &mut stats, &finger_weights);
     })
 }
 fn bench_sf(
@@ -168,7 +168,7 @@ fn bench_skipgram_stats(
         (Finger::Index, 18),
         (Finger::Thumb, 50),
     ]);
-    let stats = Stats::default();
+    let mut stats = Stats::default();
     let layout_letters: String = fs::read_to_string("whirl.txt")
         .expect("couldn't read layout")
         .replace([' ', ' '], "")
@@ -189,7 +189,7 @@ fn bench_skipgram_stats(
     let key2 = &table[&letters.chars().nth(1).unwrap()];
     let epickey = &table[&letters.chars().nth(2).unwrap()];
     bencher.bench(|| {
-        skipgram_stats(&key1, &key2, &epickey, command, stats.clone(), &finger_weights);
+        skipgram_stats(&key1, &key2, &epickey, command, &mut stats, &finger_weights);
     })
 }
 

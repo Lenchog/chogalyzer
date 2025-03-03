@@ -8,9 +8,9 @@ pub fn bigram_stats(
     key1: &Key,
     key2: &Key,
     command: &String,
-    mut stats: Stats,
+    stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
-) -> (Stats, bool, bool, u32) {
+) -> (bool, bool, u32) {
     let mut insert_bigram = false;
     let mut bad_bigram = false;
     let mut bigram_weight = 0;
@@ -18,16 +18,15 @@ pub fn bigram_stats(
     stats.bigrams += 1;
     if sf(key1, key2) {
         stats.sfb += 1;
-        let distance: i64 = if !(key1.lateral || key2.lateral) {
-            key1.row as i64 - key2.row as i64
-        } else if key1.row == key2.row {
-            1
+
+        let dy = key1.row.abs_diff(key2.row);
+        let distance = if key1.lateral == key2.lateral {
+          dy.max(1)
         } else {
-            (((key1.row as i64 - key2.row as i64) * (key1.row as i64 - key2.row as i64) + 1) as f64)
-                .sqrt() as i64
+          (dy.pow(2) + 1).isqrt()
         };
-        stats.fspeed += 5 * finger_weights[&key1.finger] * distance.abs();
-        bigram_weight += 5 * finger_weights[&key1.finger] * distance.abs();
+        stats.fspeed += 5 * finger_weights[&key1.finger] * distance as i64;
+        bigram_weight += 5 * finger_weights[&key1.finger] * distance as i64;
         bad_bigram = true;
         if command == "sfb" {
             insert_bigram = true;
@@ -67,7 +66,6 @@ pub fn bigram_stats(
         }
     }
     (
-        stats,
         insert_bigram,
         bad_bigram,
         bigram_weight.try_into().unwrap(),
@@ -79,14 +77,19 @@ pub fn skipgram_stats(
     key2: &Key,
     epic_key1: &Key,
     command: &String,
-    mut stats: Stats,
+    stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
-) -> (Stats, bool) {
+) -> bool {
     let mut insert_ngram = false;
     stats.skipgrams += 1;
     if sf(key1, key2) {
-        let distance: i64 = key1.row as i64 - key2.row as i64;
-        stats.fspeed += distance.abs() * finger_weights[&key1.finger];
+        let dy = key1.row.abs_diff(key2.row);
+        let distance = if key1.lateral == key2.lateral {
+          dy.max(1)
+        } else {
+          (dy.pow(2) + 1).isqrt()
+        };
+        stats.fspeed += distance as i64 * finger_weights[&key1.finger];
         stats.sfs += 1;
         if command == "sfs" {
             insert_ngram = true;
@@ -134,7 +137,7 @@ pub fn skipgram_stats(
         }
     }
 
-    (stats, insert_ngram)
+    insert_ngram
 }
 pub fn sf(key1: &Key, key2: &Key) -> bool {
     if key1.finger == key2.finger && key1.hand == key2.hand && key1 != key2 {

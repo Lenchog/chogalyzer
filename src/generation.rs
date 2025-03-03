@@ -202,13 +202,12 @@ fn get_magic_rules(
     for letter in corpus.chars() {
         let key = &layout[&letter];
         let previous_key = &layout[&previous_letter];
-        let bigram = bigram_stats::bigram_stats(previous_key, key, command, stats, &finger_weights);
-        stats = bigram.0;
-        if bigram.2 {
+        let bigram = bigram_stats::bigram_stats(previous_key, key, command, &mut stats, &finger_weights);
+        if bigram.1 {
             *stats
                 .bad_bigrams
                 .entry([previous_letter, letter])
-                .or_insert(0) += bigram.3;
+                .or_insert(0) += bigram.2;
         }
         previous_letter = letter;
     }
