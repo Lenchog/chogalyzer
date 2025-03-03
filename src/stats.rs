@@ -36,7 +36,14 @@ pub fn analyze(
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
-        let bigram = bigram_stats::bigram_stats(previous_key, key, command, &mut stats, &finger_weights);
+        let bigram = bigram_stats::bigram_stats(
+            previous_key,
+            key,
+            command,
+            &mut stats,
+            &finger_weights,
+            false,
+        );
         *char_freq.entry(letter).or_insert(0) += 1;
         if bigram.0 {
             *stats
@@ -44,11 +51,11 @@ pub fn analyze(
                 .entry([previous_letter, letter, ' '])
                 .or_insert(0) += 1;
         }
-        if bigram.1 {
+        if bigram.1 > 0 {
             *stats
                 .bad_bigrams
                 .entry([previous_letter, letter])
-                .or_insert(0) += bigram.2;
+                .or_insert(0) += bigram.1;
         }
         let skipgram = bigram_stats::skipgram_stats(
             skip_previous_key,

@@ -10,66 +10,69 @@ pub fn bigram_stats(
     command: &String,
     stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
-) -> (bool, bool, u32) {
+    get_bad_bigrams: bool,
+) -> (bool, u32) {
     let mut insert_bigram = false;
-    let mut bad_bigram = false;
     let mut bigram_weight = 0;
 
     stats.bigrams += 1;
-    if sf(key1, key2) {
-        stats.sfb += 1;
+    if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
+        if key1.finger == key2.finger {
+            stats.sfb += 1;
+            let sfr = key1 == key2;
+            let weight = if sfr { 2 } else { 5 };
 
-        let dy = key1.row.abs_diff(key2.row);
-        let distance = if key1.lateral == key2.lateral {
-          dy.max(1)
+            let dy = key1.row.abs_diff(key2.row);
+            let distance: u8 = if !sfr {
+                if key1.lateral == key2.lateral {
+                    dy.max(1)
+                } else {
+                    (dy.pow(2) + 1).isqrt()
+                }
+            } else {
+                1
+            };
+            stats.fspeed += weight * finger_weights[&key1.finger] * distance as i64;
+            if get_bad_bigrams {
+                bigram_weight += 5 * finger_weights[&key1.finger] * distance as i64;
+            }
+            if (!sfr && command == "sfb") || sfr && command == "sfr" {
+                insert_bigram = true;
+            }
         } else {
-          (dy.pow(2) + 1).isqrt()
-        };
-        stats.fspeed += 5 * finger_weights[&key1.finger] * distance as i64;
-        bigram_weight += 5 * finger_weights[&key1.finger] * distance as i64;
-        bad_bigram = true;
-        if command == "sfb" {
-            insert_bigram = true;
-        }
-    } else if key1 == key2 {
-        stats.sfr += 1;
-        stats.fspeed += 2 * finger_weights[&key1.finger];
-        bigram_weight += 2 * finger_weights[&key1.finger];
-        bad_bigram = true;
-        if command == "sfr" {
-            insert_bigram = true;
-        }
-    } else {
-        if ls(key1, key2) {
-            stats.lsb += 1;
-            bad_bigram = true;
-            bigram_weight += 30;
-            if command == "lsb" {
-                insert_bigram = true;
+            if key1.lateral || key2.lateral {
+                stats.lsb += 1;
+                if get_bad_bigrams {
+                    bigram_weight += 30;
+                }
+                if command == "lsb" {
+                    insert_bigram = true;
+                }
             }
-        }
-        if scissor(key1, key2) == 1 {
-            stats.hsb += 1;
-            bad_bigram = true;
-            bigram_weight += 30;
-            if command == "hsb" {
-                insert_bigram = true;
-            }
-        }
-        else if scissor(key1, key2) == 2 {
-            stats.fsb += 1;
-            bad_bigram = true;
-            bigram_weight += 90;
-            if command == "fsb" {
-                insert_bigram = true;
+            match scissor(key1, key2) {
+                1 => {
+                    stats.hsb += 1;
+                    if get_bad_bigrams {
+                        bigram_weight += 30;
+                    }
+                    if command == "hsb" {
+                        insert_bigram = true;
+                    }
+                }
+                2 => {
+                    stats.fsb += 1;
+                    if get_bad_bigrams {
+                        bigram_weight += 90;
+                    }
+                    if command == "fsb" {
+                        insert_bigram = true;
+                    }
+                }
+                _ => {}
             }
         }
     }
-    (
-        insert_bigram,
-        bad_bigram,
-        bigram_weight.try_into().unwrap(),
-    )
+    (insert_bigram, bigram_weight.try_into().unwrap())
 }
 
 pub fn skipgram_stats(
@@ -82,57 +85,71 @@ pub fn skipgram_stats(
 ) -> bool {
     let mut insert_ngram = false;
     stats.skipgrams += 1;
-    if sf(key1, key2) {
-        let dy = key1.row.abs_diff(key2.row);
-        let distance = if key1.lateral == key2.lateral {
-          dy.max(1)
-        } else {
-          (dy.pow(2) + 1).isqrt()
-        };
-        stats.fspeed += distance as i64 * finger_weights[&key1.finger];
-        stats.sfs += 1;
-        if command == "sfs" {
-            insert_ngram = true;
-        }
-    } else {
-        if ls(key1, key2) {
-            stats.lss += 1;
-            if command == "lss" {
-                insert_ngram = true;
-            }
-        }
-        if scissor(key1, key2) == 1 {
-            stats.hss += 1;
-            if command == "hss" {
-                insert_ngram = true;
-            }
-        }
-        else if scissor(key1, key2) == 2 {
-            stats.fss += 1;
-            if command == "fss" {
-                insert_ngram = true;
-            }
-        }
-    }
-
-    if epic_key1.hand == key2.hand {
-        stats.skipgrams += 1;
-        if sf(epic_key1, key2) && epic_key1 != key2 {
+    if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
+        if key1.finger == key2.finger {
+            let dy = key1.row.abs_diff(key2.row);
+            let distance = if key1.lateral == key2.lateral {
+                dy.max(1)
+            } else {
+                (dy.pow(2) + 1).isqrt()
+            };
+            stats.fspeed += distance as i64 * finger_weights[&key1.finger];
             stats.sfs += 1;
             if command == "sfs" {
                 insert_ngram = true;
             }
-        }
-        if ls(key2, epic_key1) && epic_key1 != key2 {
-            stats.lss += 1;
-            if command == "lss" {
-                insert_ngram = true;
+        } else {
+            if key1.lateral || key2.lateral {
+                stats.lss += 1;
+                if command == "lss" {
+                    insert_ngram = true;
+                }
+            }
+            match scissor(key1, key2) {
+                1 => {
+                    stats.hss += 1;
+                    if command == "hss" {
+                        insert_ngram = true;
+                    }
+                }
+                2 => {
+                    stats.fss += 1;
+                    if command == "fss" {
+                        insert_ngram = true;
+                    }
+                }
+                _ => {}
             }
         }
-        if scissor(key2, epic_key1) == 2 && epic_key1 != key2 {
-            stats.fss += 1;
-            if command == "fss" {
-                insert_ngram = true;
+
+        if epic_key1.hand == key2.hand {
+            stats.skipgrams += 1;
+            if epic_key1.finger == key2.finger && epic_key1 != key2 {
+                stats.sfs += 1;
+                if command == "sfs" {
+                    insert_ngram = true;
+                }
+            }
+            if key2.lateral || epic_key1.lateral && epic_key1 != key2 {
+                stats.lss += 1;
+                if command == "lss" {
+                    insert_ngram = true;
+                }
+            }
+            match scissor(key1, key2) {
+                1 => {
+                    stats.hss += 1;
+                    if command == "hss" {
+                        insert_ngram = true;
+                    }
+                }
+                2 => {
+                    stats.fss += 1;
+                    if command == "fss" {
+                        insert_ngram = true;
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -158,13 +175,16 @@ pub fn ls(key1: &Key, key2: &Key) -> bool {
 }
 
 pub fn scissor(key1: &Key, key2: &Key) -> u8 {
-    let distance: u8 = (i64::from(key1.row) - i64::from(key2.row)).abs().try_into().expect("invalid distance");
+    let distance: u8 = (i64::from(key1.row) - i64::from(key2.row))
+        .abs()
+        .try_into()
+        .expect("invalid distance");
     if key1.hand == key2.hand
         && key1.finger != key2.finger
         && (((key1.finger == Finger::Pinky || key1.finger == Finger::Index)
             && (key2.finger == Finger::Middle || key2.finger == Finger::Ring))
-        || ((key2.finger == Finger::Pinky || key2.finger == Finger::Index)
-            && (key1.finger == Finger::Middle || key1.finger == Finger::Ring)))
+            || ((key2.finger == Finger::Pinky || key2.finger == Finger::Index)
+                && (key1.finger == Finger::Middle || key1.finger == Finger::Ring)))
     {
         return distance;
     }
