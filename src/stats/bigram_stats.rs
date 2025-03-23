@@ -18,8 +18,12 @@ pub fn bigram_stats(
     stats.bigrams += 1;
     if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
         if key1.finger == key2.finger {
-            stats.sfb += 1;
             let sfr = key1 == key2;
+            if sfr {
+                stats.sfr += 1;
+            } else {
+                stats.sfb += 1;
+            }
             let weight = if sfr { 2 } else { 5 };
 
             let dy = key1.row.abs_diff(key2.row);
