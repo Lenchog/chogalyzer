@@ -7,7 +7,7 @@ use crate::Stats;
 pub fn bigram_stats(
     key1: &Key,
     key2: &Key,
-    command: &String,
+    command: &str,
     stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
     get_bad_bigrams: bool,
@@ -83,7 +83,7 @@ pub fn skipgram_stats(
     key1: &Key,
     key2: &Key,
     epic_key1: &Key,
-    command: &String,
+    command: &str,
     stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
 ) -> bool {

@@ -17,9 +17,6 @@ lto = "fat"
 debug = 1
 panic = "abort"
 
-[build]
-rustflags = ["-C", "target-cpu=native"]
-
 [dev-dependencies]
 diol = {version = "0.8.0", default-features = false}
 

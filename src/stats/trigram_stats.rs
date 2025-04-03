@@ -78,7 +78,7 @@ pub fn trigram_stats(
     key1: &Key,
     key2: &Key,
     key3: &Key,
-    command: &String,
+    command: &str,
     mut stats: Stats,
 ) -> (Stats, bool) {
     let mut insert_ngram = false;

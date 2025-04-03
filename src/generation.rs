@@ -62,7 +62,7 @@ fn generate(
     layout.1 = stats::analyze(
         corpus.to_string(),
         layout.0,
-        &"generate".to_string(),
+        "generate",
         &layout.2,
     );
     let bar = ProgressBar::new(max_iterations);
@@ -76,7 +76,7 @@ fn generate(
         layout.1 = stats::analyze(
             corpus.to_string(),
             layout.0,
-            &"generate".to_string(),
+            "generate",
             &layout.2,
         );
         *layout_stats = &layout.1.clone();
@@ -121,14 +121,14 @@ pub fn attempt_swap(
     let magic = get_magic_rules(
         &corpus.to_string(),
         new_layout,
-        &"generate".to_string(),
+        "generate",
         magic_rules,
     );
 
     let new_stats = stats::analyze(
         corpus.to_string(),
         new_layout,
-        &"generate".to_string(),
+        "generate",
         &magic,
     );
 
@@ -183,13 +183,13 @@ fn column_swap(mut layout: [char; 32], col1: usize, col2: usize) -> [char; 32] {
 }
 
 fn get_magic_rules(
-    corpus: &String,
+    corpus: &str,
     layout_letters: [char; 32],
-    command: &String,
+    command: &str,
     magic_rules: usize,
 ) -> Vec<String> {
     let layout = layout_raw_to_table(&layout_letters);
-    let mut previous_letter = '⎵';
+    let mut previous_letter = '_';
     let mut stats: Stats = Stats::default();
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
         (Finger::Pinky, 66),
