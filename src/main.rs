@@ -47,7 +47,7 @@ fn main() {
         .replace("\n\n", "")
         .replace(' ', "⎵")
         .chars()
-        .map(|ch| {
+        .flat_map(|ch| {
             if ch.is_ascii_uppercase() {
                 // Replace uppercase letters with "*" followed by lowercase
                 format!("*{}", ch.to_ascii_lowercase())
@@ -58,7 +58,6 @@ fn main() {
                 vec![ch]
             }
         })
-        .flatten()
         .filter(|ch| layout_raw.contains(ch))
         .collect();
 
