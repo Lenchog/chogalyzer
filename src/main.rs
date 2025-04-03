@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::fs;
+use std::{fs::{self, File}, io::Write};
 
 use chogalyzer::{generation, output, stats};
 
@@ -27,7 +27,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let layout_letters: String = fs::read_to_string(args.layout.clone())
+    let layout_letters: String = fs::read_to_string("layouts/".to_owned() + &args.layout.clone())
         .expect("couldn't read layout")
         .replace([' ', ' '], "")
         .chars()
@@ -41,25 +41,13 @@ fn main() {
         .try_into()
         .expect("couldn't read layout");
 
-    /* let corpus: String = fs::read_to_string(&args.corpus)
-        .expect("error reading corpus")
-        .replace("\n\n", "")
-        .replace(' ', "_")
-        .chars()
-        .flat_map(|ch| {
-            if ch.is_ascii_uppercase() {
-                // Replace uppercase letters with "*" followed by lowercase
-                format!("*{}", ch.to_ascii_lowercase())
-                    .chars()
-                    .collect::<Vec<_>>()
-            } else {
-                // Leave other characters unchanged
-                vec![ch]
-            }
-        })
-        .filter(|ch| layout_raw.contains(ch))
-        .collect(); */
-    let corpus: String = fs::read_to_string("filtered-corpus.txt").expect("oops").replace("\n", "");
+    let corpus: String = match fs::read_to_string("corpora/filtered/".to_owned() + &args.corpus.clone()) {
+        Ok(corpus) => corpus,
+        Err(_) => {
+            println!("couldn't find corpus, now loading");
+            load_corpus(&args, &layout_raw)
+        },
+    };
 
     let magic_rules_raw = layout_letters[38..].split('\n');
     let mut magic_rules: Vec<String> = Vec::default();
@@ -80,6 +68,7 @@ fn main() {
             &magic_rules,
             args.layout.clone().strip_suffix(".txt").unwrap(),
         ),
+        // "load" => load_corpus(&args, &layout_raw),
         "generate" => {
             let layout = generation::generate_threads(
                 layout_raw,
@@ -125,4 +114,28 @@ fn main() {
         "trigrams" => output::print_ngrams(&ngram_vec, stats.trigrams, "Trigrams".to_string()),
         _ => println!("invalid command"),
     }
+}
+
+fn load_corpus(args: &Args, layout_raw: &[char; 32]) -> String {
+    println!("{}", "corpora/raw/".to_owned() + &args.corpus);
+    let corpus: String = fs::read_to_string("corpora/raw/".to_owned() + &args.corpus)
+        .expect("error reading corpus")
+        .replace("\n\n", "")
+        .replace(' ', "_")
+        .chars()
+        .flat_map(|ch| {
+            if ch.is_ascii_uppercase() {
+                // Replace uppercase letters with "*" followed by lowercase
+                format!("*{}", ch.to_ascii_lowercase())
+                    .chars()
+                    .collect::<Vec<_>>()
+            } else {
+                vec![ch]
+            }
+        })
+        .filter(|ch| layout_raw.contains(ch))
+        .collect();
+    let mut write_file = File::create("corpora/filtered/".to_owned() + &args.corpus).expect("couldn't write corpus");
+    let _ = write_file.write_all(&corpus.as_bytes());
+    corpus.to_string()
 }
