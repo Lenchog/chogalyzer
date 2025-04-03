@@ -12,7 +12,7 @@ pub fn analyze(
     magic_rules: &Vec<String>,
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
-    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['⎵'; 3];
+    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
     let mut stats: Stats = Stats::default();
     let mut char_freq: AHashMap<char, u32> = AHashMap::default();
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
@@ -31,7 +31,8 @@ pub fn analyze(
         }
     }
 
-    for letter in corpus.chars() {
+    for letter_u8 in corpus.as_bytes() {
+        let letter = *letter_u8 as char;
         let key = &layout[&letter];
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];

@@ -30,7 +30,6 @@ fn main() {
     let layout_letters: String = fs::read_to_string(args.layout.clone())
         .expect("couldn't read layout")
         .replace([' ', ' '], "")
-        .replace('_', "⎵")
         .chars()
         .collect();
 
@@ -45,7 +44,7 @@ fn main() {
     let corpus: String = fs::read_to_string(&args.corpus)
         .expect("error reading corpus")
         .replace("\n\n", "")
-        .replace(' ', "⎵")
+        .replace(' ', "_")
         .chars()
         .flat_map(|ch| {
             if ch.is_ascii_uppercase() {

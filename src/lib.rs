@@ -4,7 +4,7 @@ pub mod stats;
 
 use ahash::AHashMap;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Key {
     pub hand: u8,
     pub finger: Finger,
@@ -12,7 +12,7 @@ pub struct Key {
     pub lateral: bool,
 }
 
-#[derive(Eq, Hash, PartialEq, PartialOrd)]
+#[derive(Eq, Hash, PartialEq, PartialOrd, Debug)]
 pub enum Finger {
     Thumb,
     Index,
