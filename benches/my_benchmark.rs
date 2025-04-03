@@ -16,6 +16,7 @@ fn main() -> std::io::Result<()> {
     bench.run()?;
     Ok(())
 }
+
 fn bench_bigram_stats(bencher: Bencher, letters: &str) {
     let command = &String::from("bench");
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
@@ -71,6 +72,7 @@ fn bench_scissor(bencher: Bencher, letters: &str) {
         scissor(&key1, &key2);
     })
 }
+
 fn bench_skipgram_stats(bencher: Bencher, letters: &str) {
     let command = &String::from("bench");
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([

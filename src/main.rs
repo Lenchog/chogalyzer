@@ -41,7 +41,7 @@ fn main() {
         .try_into()
         .expect("couldn't read layout");
 
-    let corpus: String = fs::read_to_string(&args.corpus)
+    /* let corpus: String = fs::read_to_string(&args.corpus)
         .expect("error reading corpus")
         .replace("\n\n", "")
         .replace(' ', "_")
@@ -58,7 +58,8 @@ fn main() {
             }
         })
         .filter(|ch| layout_raw.contains(ch))
-        .collect();
+        .collect(); */
+    let corpus: String = fs::read_to_string("filtered-corpus.txt").expect("oops").replace("\n", "");
 
     let magic_rules_raw = layout_letters[38..].split('\n');
     let mut magic_rules: Vec<String> = Vec::default();

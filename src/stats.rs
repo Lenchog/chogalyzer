@@ -85,9 +85,9 @@ pub fn analyze(
         epic_previous_letter = letter;
         skip_previous_letter = previous_letter;
         previous_letter = letter;
-        if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
-            stats.trigrams -= stats.thumb_stat;
-        }
+    }
+    if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
+        stats.trigrams -= stats.thumb_stat;
     }
     #[rustfmt::skip]
     let weighting: [u32; 32] = [
