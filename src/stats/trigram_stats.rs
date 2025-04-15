@@ -121,7 +121,7 @@ pub fn trigram_stats(
         }
         Trigram::WeakRed => {
             stats.weak_red += 1;
-            if command == "weak_red" {
+            if command == "weak" {
                 insert_ngram = true;
             }
         }

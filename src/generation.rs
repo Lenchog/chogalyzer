@@ -18,8 +18,8 @@ pub fn generate_threads(
     max_iterations: u64,
     magic_rules: usize,
     cooling_rate: f64,
-) -> ([char; 32], f64, Vec<String>) {
-    let mut layouts: [([char; 32], f64, Vec<String>); THREADS] = Default::default();
+) -> ([char; 32], f64, AHashMap<char, char>) {
+    let mut layouts: [([char; 32], f64, AHashMap<char, char>); THREADS] = Default::default();
     let bars = MultiProgress::new();
     thread::scope(|s| {
         let vec: Vec<_> = (0..THREADS)
@@ -51,12 +51,12 @@ fn generate(
     multibars: &MultiProgress,
     magic_rules: usize,
     cooling_rate: f64,
-) -> ([char; 32], f64, Vec<String>) {
+) -> ([char; 32], f64, AHashMap<char, char>) {
     let mut rng = thread_rng();
-    let mut layout: ([char; 32], Stats, Vec<String>) = (
+    let mut layout: ([char; 32], Stats, AHashMap<char, char>) = (
         layout_raw,
         Stats::default(),
-        vec![String::default(); magic_rules],
+        AHashMap::default(),
     );
     layout.0.shuffle(&mut rng);
     layout.1 = stats::analyze(
@@ -65,8 +65,8 @@ fn generate(
         "generate",
         &layout.2,
     );
-    let bar = ProgressBar::new(max_iterations);
-    multibars.add(bar.clone());
+    /* let bar = ProgressBar::new(max_iterations);
+    multibars.add(bar.clone()); */
     let stat_array: &[Stats; 10] = &Default::default();
     for ref mut layout_stats in stat_array {
         let mut rng = rand::thread_rng();
@@ -92,28 +92,28 @@ fn generate(
             layout.2,
             temparature,
             magic_rules,
+            iterations,
         );
-        bar.inc(1);
+        //bar.inc(1);
         temparature *= cooling_rate;
     }
     (layout.0, layout.1.score, layout.2)
 }
 
 pub fn attempt_swap(
-    layout: [char; 32],
+    old_layout: [char; 32],
     corpus: &String,
     old_stats: Stats,
-    old_magic: Vec<String>,
+    old_magic: AHashMap<char, char>,
     temparature: f64,
     magic_rules: usize,
-) -> ([char; 32], Stats, Vec<String>) {
+    iterations: u64,
+) -> ([char; 32], Stats, AHashMap<char, char>) {
     let mut rng = rand::thread_rng();
-    let letter1 = rng.gen_range(0..layout.len());
-    let letter2 = rng.gen_range(0..layout.len());
-
-    let mut new_layout = layout;
+    let mut new_layout = old_layout;
+    // swap letters or column
     if rng.gen_range(0..10) > 3 {
-        new_layout.swap(letter1, letter2);
+        new_layout.swap(rng.gen_range(0..32), rng.gen_range(0..32));
     } else {
         new_layout = column_swap(new_layout, rng.gen_range(1..10), rng.gen_range(1..10));
     }
@@ -121,7 +121,6 @@ pub fn attempt_swap(
     let magic = get_magic_rules(
         &corpus.to_string(),
         new_layout,
-        "generate",
         magic_rules,
     );
 
@@ -135,15 +134,16 @@ pub fn attempt_swap(
     if new_stats.score > old_stats.score
         || annealing_func(old_stats.score, new_stats.score, temparature)
     {
+        //println!("{iterations}, {}", new_stats.score);
         (new_layout, new_stats, magic)
     } else {
-        (layout, old_stats, old_magic)
+        (old_layout, old_stats, old_magic)
     }
 }
 
 fn compare_layouts(
-    layouts: &[([char; 32], f64, Vec<String>); THREADS],
-) -> ([char; 32], f64, Vec<String>) {
+    layouts: &[([char; 32], f64, AHashMap<char, char>); THREADS],
+) -> ([char; 32], f64, AHashMap<char, char>) {
     let mut best_score = layouts[0].1;
     let mut best_layout = 0;
     for (i, item) in layouts.iter().enumerate() {
@@ -182,12 +182,11 @@ fn column_swap(mut layout: [char; 32], col1: usize, col2: usize) -> [char; 32] {
     layout
 }
 
-fn get_magic_rules(
+pub fn get_magic_rules(
     corpus: &str,
     layout_letters: [char; 32],
-    command: &str,
     magic_rules: usize,
-) -> Vec<String> {
+) -> AHashMap<char, char> {
     let layout = layout_raw_to_table(&layout_letters);
     let mut previous_letter = '_';
     let mut stats: Stats = Stats::default();
@@ -205,7 +204,7 @@ fn get_magic_rules(
         let bigram = bigram_stats::bigram_stats(
             previous_key,
             key,
-            command,
+            "get_bad_bigrams",
             &mut stats,
             &finger_weights,
             true,
@@ -224,26 +223,17 @@ fn get_magic_rules(
     sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     let mut used_first_letters: AHashSet<char> = AHashSet::new();
-    let mut sorted_keys: Vec<String> = Vec::new();
+    let mut sorted_keys: AHashMap<char, char> = AHashMap::default();
 
     // Iterate and select only unique first-letter bigrams
     for (key, _) in sorted_vec {
-        if !used_first_letters.contains(&key[0]) {
-            sorted_keys.push(key.iter().collect::<String>());
+        if !used_first_letters.contains(&key[0])/*  && key[0] != key[1] */ {
+            sorted_keys.insert(key[0], key[1]);
             used_first_letters.insert(key[0]); // Mark the first letter as used
         }
         if sorted_keys.len() == magic_rules {
             break;
         }
     }
-    /* let mut sorted_vec: Vec<([char; 2], u32)> = stats.bad_bigrams.into_iter().collect();
-    sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
-
-    // Extract only the keys ([char; 2])
-    let sorted_keys: Vec<String> = sorted_vec
-        .into_iter()
-        .take(magic_rules)
-        .map(|(key, _)| key.iter().collect::<String>())
-        .collect(); */
     sorted_keys
 }

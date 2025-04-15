@@ -1,73 +1,54 @@
 use ahash::AHashMap;
 use chogalyzer::stats::bigram_stats::{bigram_stats, scissor, skipgram_stats};
-use chogalyzer::stats::layout_raw_to_table;
+use chogalyzer::stats::{analyze, layout_raw_to_table};
 use chogalyzer::stats::trigram_stats::trigram_stat;
+use chogalyzer::generation::get_magic_rules;
 use chogalyzer::*;
+use chogalyzer::{load_layout, load_magic_rules};
 use diol::prelude::*;
 use std::fs;
 
 fn main() -> std::io::Result<()> {
     let mut bench = Bench::new(BenchConfig::from_args()?);
 
-    bench.register(bench_bigram_stats, ["wh", "tm", "th", "el", "y."]);
-    bench.register(bench_scissor, ["el", "l.", "th"]);
-    bench.register(bench_skipgram_stats, ["whn", "tmn", "thn", "elr", "y.r"]);
+    bench.register(bench_bigram_stats, ["de", "ey", "er", "li", "ex"]);
+    bench.register(bench_scissor, ["ex", "li", "er"]);
+    bench.register(bench_skipgram_stats, ["eda", "tmn", "thn", "elr", "y.r"]);
     bench.register(bench_trigram_stats, ["you", "thr", "ale", "atr"]);
+    bench.register(bench_analyse, ["analyze", "sfb"]);
+    bench.register(bench_get_magic_rules, [1, 10, 20]);
     bench.run()?;
     Ok(())
 }
 
-fn bench_bigram_stats(bencher: Bencher, letters: &str) {
-    let command = &String::from("bench");
-    let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
-        (Finger::Pinky, 66),
-        (Finger::Ring, 28),
-        (Finger::Middle, 21),
-        (Finger::Index, 18),
-        (Finger::Thumb, 50),
-    ]);
-    let mut stats = Stats::default();
-    let layout_letters: String = fs::read_to_string("whirl.txt")
-        .expect("couldn't read layout")
-        .replace([' ', ' '], "")
-        .replace('_', "⎵")
-        .chars()
-        .collect();
-
-    // has to be 37 because ⎵ is a few extra bytes
-    let layout_raw: [char; 32] = layout_letters[..37]
-        .replace('\n', "")
-        .chars()
-        .collect::<Vec<char>>()
-        .try_into()
-        .expect("couldn't read layout");
-
-    let table = layout_raw_to_table(&layout_raw);
-    let key1 = &table[&letters.chars().next().unwrap()];
-    let key2 = &table[&letters.chars().nth(1).unwrap()];
+fn bench_analyse(bencher: Bencher, command: &str) {
+    let magic_rules = load_magic_rules();
+    let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
+    let layout_raw = load_layout();
     bencher.bench(|| {
-        bigram_stats(&key1, &key2, command, &mut stats, &finger_weights, false);
+        analyze(corpus.clone(), layout_raw, command, &magic_rules)
+    });
+}
+
+fn bench_get_magic_rules(bencher: Bencher, magic_rules: usize) {
+    let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
+    let layout_raw = load_layout();
+    bencher.bench(|| {
+        get_magic_rules(&corpus, layout_raw, magic_rules)
+    });
+}
+
+fn bench_bigram_stats(bencher: Bencher, letters: &str) {
+    let mut stats = Stats::default();
+    let finger_weights = load_finger_weights();
+
+    let (key1, key2) = load_two_keys(letters);
+    bencher.bench(|| {
+        bigram_stats(&key1, &key2, "bench", &mut stats, &finger_weights, false);
     })
 }
 fn bench_scissor(bencher: Bencher, letters: &str) {
-    let layout_letters: String = fs::read_to_string("whirl.txt")
-        .expect("couldn't read layout")
-        .replace([' ', ' '], "")
-        .replace('_', "⎵")
-        .chars()
-        .collect();
-
-    // has to be 37 because ⎵ is a few extra bytes
-    let layout_raw: [char; 32] = layout_letters[..37]
-        .replace('\n', "")
-        .chars()
-        .collect::<Vec<char>>()
-        .try_into()
-        .expect("couldn't read layout");
-
-    let table = layout_raw_to_table(&layout_raw);
-    let key1 = &table[&letters.chars().next().unwrap()];
-    let key2 = &table[&letters.chars().nth(1).unwrap()];
+    let (key1, key2) = load_two_keys(letters);
     bencher.bench(|| {
         scissor(&key1, &key2);
     })
@@ -75,83 +56,45 @@ fn bench_scissor(bencher: Bencher, letters: &str) {
 
 fn bench_skipgram_stats(bencher: Bencher, letters: &str) {
     let command = &String::from("bench");
-    let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
-        (Finger::Pinky, 66),
-        (Finger::Ring, 28),
-        (Finger::Middle, 21),
-        (Finger::Index, 18),
-        (Finger::Thumb, 50),
-    ]);
+    let finger_weights = load_finger_weights();
     let mut stats = Stats::default();
-    let layout_letters: String = fs::read_to_string("whirl.txt")
-        .expect("couldn't read layout")
-        .replace([' ', ' '], "")
-        .replace('_', "⎵")
-        .chars()
-        .collect();
 
-    // has to be 37 because ⎵ is a few extra bytes
-    let layout_raw: [char; 32] = layout_letters[..37]
-        .replace('\n', "")
-        .chars()
-        .collect::<Vec<char>>()
-        .try_into()
-        .expect("couldn't read layout");
-
-    let table = layout_raw_to_table(&layout_raw);
-    let key1 = &table[&letters.chars().next().unwrap()];
-    let key2 = &table[&letters.chars().nth(1).unwrap()];
-    let epickey = &table[&letters.chars().nth(2).unwrap()];
+    let (key1, key2, epic_key) = load_three_keys(letters);
     bencher.bench(|| {
-        skipgram_stats(&key1, &key2, &epickey, command, &mut stats, &finger_weights);
+        skipgram_stats(&key1, &key2, &epic_key, command, &mut stats, &finger_weights);
     })
 }
 
 fn bench_trigram_stats(bencher: Bencher, letters: &str) {
-    let layout_letters: String = fs::read_to_string("whirl.txt")
-        .expect("couldn't read layout")
-        .replace([' ', ' '], "")
-        .replace('_', "⎵")
-        .chars()
-        .collect();
-
-    // has to be 37 because ⎵ is a few extra bytes
-    let layout_raw: [char; 32] = layout_letters[..37]
-        .replace('\n', "")
-        .chars()
-        .collect::<Vec<char>>()
-        .try_into()
-        .expect("couldn't read layout");
-
-    let table = layout_raw_to_table(&layout_raw);
-    let key1 = &table[&letters.chars().next().unwrap()];
-    let key2 = &table[&letters.chars().nth(1).unwrap()];
-    let key3 = &table[&letters.chars().nth(2).unwrap()];
+    let (key1, key2, key3) = load_three_keys(letters);
     bencher.bench(|| {
         trigram_stat(&key1, &key2, &key3);
     })
 }
 
-/* fn swap_letters(bencher: Bencher, corpus: &String) {
-    let layout = "abcdefghijklmnopqrstuv,.';*⎵".shuffle();
-    old_stats = attempt_swap(
-        do_magic,
-        layout,
-        magic,
-        corpus,
-        old_stats,
-        bad_bigrams,
-        temparature,
-    );
-    bencher.bench(|| {
-        attempt_swap(
-            false,
-            layout,
-            Vec::default(),
-            corpus,
-            old_stats,
-            bad_bigrams,
-            temparature,
-        )
-    })
-} */
+fn load_three_keys(letters: &str) -> (Key, Key, Key) {
+    let layout_raw = &load_layout();
+    let table = layout_raw_to_table(layout_raw);
+    let key1 = table[&letters.chars().next().unwrap()].clone();
+    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
+    let key3 = table[&letters.chars().nth(2).unwrap()].clone();
+    (key1, key2, key3)
+}
+
+fn load_two_keys(letters: &str) -> (Key, Key) {
+    let layout_raw = &load_layout();
+    let table = layout_raw_to_table(layout_raw);
+    let key1 = table[&letters.chars().next().unwrap()].clone();
+    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
+    (key1, key2)
+}
+
+fn load_finger_weights() -> AHashMap<Finger, i64> {
+    AHashMap::from([
+        (Finger::Pinky, 66),
+        (Finger::Ring, 28),
+        (Finger::Middle, 21),
+        (Finger::Index, 18),
+        (Finger::Thumb, 50),
+    ])
+}

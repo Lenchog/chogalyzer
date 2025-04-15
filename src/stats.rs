@@ -9,7 +9,7 @@ pub fn analyze(
     mut corpus: String,
     layout_letters: [char; 32],
     command: &str,
-    magic_rules: &Vec<String>,
+    magic_rules: &AHashMap<char, char>,
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
     let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
@@ -23,12 +23,12 @@ pub fn analyze(
         (Finger::Thumb, 50),
     ]);
 
-    for rule in magic_rules {
-        if !rule.is_empty() {
-            if let Some(v) = rule.chars().next() {
-                corpus = corpus.replace(rule, &(v.to_string() + "*"));
-            }
-        }
+    for letter in layout_letters {
+        let rule: [char; 2] = match magic_rules.get(&letter) {
+            Some(other_letter) => [letter, *other_letter],
+            None => [letter, letter],
+        };
+        corpus = corpus.replace(&rule.iter().collect::<String>(), &format!("{letter}*"));
     }
 
     for letter_u8 in corpus.as_bytes() {
@@ -37,6 +37,9 @@ pub fn analyze(
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
+
+        *char_freq.entry(letter).or_insert(0) += 1;
+
         let bigram = bigram_stats::bigram_stats(
             previous_key,
             key,
@@ -45,18 +48,11 @@ pub fn analyze(
             &finger_weights,
             false,
         );
-        *char_freq.entry(letter).or_insert(0) += 1;
         if bigram.0 {
             *stats
                 .ngram_table
                 .entry([previous_letter, letter, ' '])
                 .or_insert(0) += 1;
-        }
-        if bigram.1 > 0 {
-            *stats
-                .bad_bigrams
-                .entry([previous_letter, letter])
-                .or_insert(0) += bigram.1;
         }
         let skipgram = bigram_stats::skipgram_stats(
             skip_previous_key,
@@ -69,7 +65,7 @@ pub fn analyze(
         if skipgram {
             *stats
                 .ngram_table
-                .entry([skip_previous_letter, letter, ' '])
+                .entry([skip_previous_letter, '_', letter])
                 .or_insert(0) += 1;
         }
         let trigram =
@@ -82,7 +78,9 @@ pub fn analyze(
                 .entry([skip_previous_letter, previous_letter, letter])
                 .or_insert(0) += 1;
         }
-        epic_previous_letter = letter;
+        if !epic_previous_key.hand == key.hand {
+            epic_previous_letter = letter;
+        }
         skip_previous_letter = previous_letter;
         previous_letter = letter;
     }
@@ -103,7 +101,7 @@ pub fn analyze(
     }
     let weights = Stats {
         score: 0.0,
-        heatmap: -200,
+        heatmap: -300,
         fspeed: -200,
         sfb: 0,
         sfr: 0,
@@ -119,8 +117,8 @@ pub fn analyze(
         alt: 0,
         inthreeroll: 300,
         outthreeroll: 150,
-        weak_red: -600,
-        red: -7,
+        weak_red: -1500,
+        red: -300,
         thumb_stat: 0,
         bigrams: 0,
         skipgrams: 0,
@@ -148,23 +146,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     score += stats.outthreeroll * weighting.outthreeroll;
     score += stats.weak_red * weighting.weak_red;
     score += stats.red * weighting.red;
-    /* println!("
-        score: {}
-        heatmap: {}
-        fspeed: {}
-        lsb: {}
-        lss: {}
-        fsb: {}
-        fss: {}
-        inroll: {}
-        outroll: {}
-        inthreeroll: {}
-        outthreeroll: {}
-        weak red: {}
-        red: {}
-    ", score, stats.heatmap * weighting.heatmap / 100, stats.fspeed * weighting.fspeed / 7, stats.lsb * weighting.lsb, stats.lss * weighting.lss, stats.fsb * weighting.fsb, stats.fss * weighting.fss, stats.inroll * weighting.inroll, stats.outroll * weighting.outroll, stats.inthreeroll * weighting.inthreeroll, stats.outthreeroll * weighting.outthreeroll, stats.weak_red * weighting.weak_red, stats.red * weighting.red); */
     score as f64
-    //-stats.sfb
 }
 
 pub fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {

@@ -1,27 +1,38 @@
 use crate::Stats;
+use ahash::AHashMap;
 use tabled::{builder::Builder, col, settings::Style};
+use crate::Args;
 
-pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String) {
+pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String, args: &Args) {
     #![allow(clippy::cast_precision_loss)]
     let min_range = 0;
     let max_range = 10;
-    let mut builder = Builder::default();
-    builder.push_record([title, "Frequency".to_string()]);
-    for line in vec.iter().take(max_range).skip(min_range) {
-        builder.push_record([
-            line.0.iter().collect(),
-            (line.1 as f32 / ngrams as f32 * 100.0).to_string(),
-        ]);
+    if !args.compact {
+        let mut builder = Builder::default();
+        builder.push_record([title, "Frequency".to_string()]);
+        for line in vec.iter().take(max_range).skip(min_range) {
+            builder.push_record([
+                line.0.iter().collect(),
+                (line.1 as f32 / ngrams as f32 * 100.0).to_string(),
+            ]);
+        }
+        let mut table = builder.build();
+        table.with(Style::sharp());
+        println!("{table}");
     }
-    let mut table = builder.build();
-    table.with(Style::sharp());
-    println!("{table}");
+    else {
+        let mut output = String::new();
+        for line in vec.iter().take(max_range).skip(min_range) {
+            output.push_str(format!("{}{}\n", line.0.iter().collect::<String>(), (line.1 as f32 / ngrams as f32 * 100.0)).as_str());
+        }
+        println!("{output}");
+    }
 }
 
 pub fn print_stats(
     stats: &Stats,
     layout: [char; 32],
-    magic_rules: &Vec<String>,
+    magic_rules: &AHashMap<char, char>,
     layout_name: &str,
 ) {
     #![allow(clippy::cast_precision_loss)]
@@ -47,7 +58,12 @@ pub fn print_stats(
         + "      "
         + &layout[31].to_string())]);
 
-    for rule in magic_rules {
+    let rule_strings: Vec<String> = magic_rules
+        .iter()
+        .map(|(&k, &v)| format!("{}{}", k, v))
+        .collect();
+
+    for rule in rule_strings {
         layout_builder.push_record([rule]);
     }
     let mut layout_table = layout_builder.build();

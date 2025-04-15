@@ -40,7 +40,7 @@ pub fn bigram_stats(
             if get_bad_bigrams {
                 bigram_weight += 5 * finger_weights[&key1.finger] * distance as i64;
             }
-            if (!sfr && command == "sfb") || sfr && command == "sfr" {
+            if (!sfr && command == "sfb") || (sfr && command == "sfr") {
                 insert_bigram = true;
             }
         } else {
@@ -90,7 +90,7 @@ pub fn skipgram_stats(
     let mut insert_ngram = false;
     stats.skipgrams += 1;
     if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
-        if key1.finger == key2.finger {
+        if key1.finger == key2.finger && key1.row != key2.row {
             let dy = key1.row.abs_diff(key2.row);
             let distance = if key1.lateral == key2.lateral {
                 dy.max(1)

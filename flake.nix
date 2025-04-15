@@ -142,6 +142,8 @@
                 statix
                 # rust
                 gcc # required for clap
+								rust-analyzer
+								lldb
                 toolchain
               ]
               ++ build-deps;
