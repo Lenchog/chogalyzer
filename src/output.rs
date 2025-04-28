@@ -1,7 +1,7 @@
+use crate::Args;
 use crate::Stats;
 use ahash::AHashMap;
 use tabled::{builder::Builder, col, settings::Style};
-use crate::Args;
 
 pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String, args: &Args) {
     #![allow(clippy::cast_precision_loss)]
@@ -19,11 +19,17 @@ pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String, args: 
         let mut table = builder.build();
         table.with(Style::sharp());
         println!("{table}");
-    }
-    else {
+    } else {
         let mut output = String::new();
         for line in vec.iter().take(max_range).skip(min_range) {
-            output.push_str(format!("{}{}\n", line.0.iter().collect::<String>(), (line.1 as f32 / ngrams as f32 * 100.0)).as_str());
+            output.push_str(
+                format!(
+                    "{}{}\n",
+                    line.0.iter().collect::<String>(),
+                    (line.1 as f32 / ngrams as f32 * 100.0)
+                )
+                .as_str(),
+            );
         }
         println!("{output}");
     }

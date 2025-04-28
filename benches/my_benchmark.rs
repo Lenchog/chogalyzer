@@ -1,8 +1,8 @@
 use ahash::AHashMap;
-use chogalyzer::stats::bigram_stats::{bigram_stats, scissor, skipgram_stats};
-use chogalyzer::stats::{analyze, layout_raw_to_table};
-use chogalyzer::stats::trigram_stats::trigram_stat;
 use chogalyzer::generation::get_magic_rules;
+use chogalyzer::stats::bigram_stats::{bigram_stats, scissor, skipgram_stats};
+use chogalyzer::stats::trigram_stats::trigram_stat;
+use chogalyzer::stats::{analyze, layout_raw_to_table};
 use chogalyzer::*;
 use chogalyzer::{load_layout, load_magic_rules};
 use diol::prelude::*;
@@ -25,17 +25,13 @@ fn bench_analyse(bencher: Bencher, command: &str) {
     let magic_rules = load_magic_rules();
     let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
     let layout_raw = load_layout();
-    bencher.bench(|| {
-        analyze(corpus.clone(), layout_raw, command, &magic_rules)
-    });
+    bencher.bench(|| analyze(corpus.clone(), layout_raw, command, &magic_rules));
 }
 
 fn bench_get_magic_rules(bencher: Bencher, magic_rules: usize) {
     let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
     let layout_raw = load_layout();
-    bencher.bench(|| {
-        get_magic_rules(&corpus, layout_raw, magic_rules)
-    });
+    bencher.bench(|| get_magic_rules(&corpus, layout_raw, magic_rules));
 }
 
 fn bench_bigram_stats(bencher: Bencher, letters: &str) {
@@ -61,7 +57,14 @@ fn bench_skipgram_stats(bencher: Bencher, letters: &str) {
 
     let (key1, key2, epic_key) = load_three_keys(letters);
     bencher.bench(|| {
-        skipgram_stats(&key1, &key2, &epic_key, command, &mut stats, &finger_weights);
+        skipgram_stats(
+            &key1,
+            &key2,
+            &epic_key,
+            command,
+            &mut stats,
+            &finger_weights,
+        );
     })
 }
 

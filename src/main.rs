@@ -1,7 +1,10 @@
-use std::{fs::{self, File}, io::Write};
 use ahash::HashMap;
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 
-use chogalyzer::{load_layout, load_magic_rules, generation, output, stats, Args};
+use chogalyzer::{generation, load_layout, load_magic_rules, output, stats, Args};
 use clap::Parser;
 
 fn main() {
@@ -59,14 +62,23 @@ fn main() {
             output::print_ngrams(&ngram_vec, stats.trigrams, "Inthreeroll".to_string(), &args);
         }
         "outthreeroll" => {
-            output::print_ngrams(&ngram_vec, stats.trigrams, "Outthreeroll".to_string(), &args);
+            output::print_ngrams(
+                &ngram_vec,
+                stats.trigrams,
+                "Outthreeroll".to_string(),
+                &args,
+            );
         }
         "red" => output::print_ngrams(&ngram_vec, stats.trigrams, "Red".to_string(), &args),
         "weak" => output::print_ngrams(&ngram_vec, stats.trigrams, "Weak".to_string(), &args),
         "thumb" => output::print_ngrams(&ngram_vec, stats.trigrams, "Thumb".to_string(), &args),
         "bigrams" => output::print_ngrams(&ngram_vec, stats.bigrams, "Bigrams".to_string(), &args),
-        "skipgrams" => output::print_ngrams(&ngram_vec, stats.skipgrams, "Skipgrams".to_string(), &args),
-        "trigrams" => output::print_ngrams(&ngram_vec, stats.trigrams, "Trigrams".to_string(), &args),
+        "skipgrams" => {
+            output::print_ngrams(&ngram_vec, stats.skipgrams, "Skipgrams".to_string(), &args)
+        }
+        "trigrams" => {
+            output::print_ngrams(&ngram_vec, stats.trigrams, "Trigrams".to_string(), &args)
+        }
         _ => println!("invalid command"),
     }
 }
@@ -90,7 +102,8 @@ fn filter_corpus(corpus_name: &String, layout_raw: &[char; 32]) -> String {
         })
         .filter(|ch| layout_raw.contains(ch))
         .collect();
-    let mut write_file = File::create("corpora/filtered/".to_owned() + corpus_name).expect("couldn't write corpus");
+    let mut write_file =
+        File::create("corpora/filtered/".to_owned() + corpus_name).expect("couldn't write corpus");
     let _ = write_file.write_all(&corpus.as_bytes());
     corpus.to_string()
 }
@@ -102,7 +115,7 @@ fn load_corpus(corpus_name: &String, layout_name: &String) -> String {
         Err(_) => {
             println!("couldn't find corpus, now loading");
             filter_corpus(corpus_name, &layout)
-        },
+        }
     }
 }
 
@@ -124,7 +137,8 @@ fn convert(new_layout_name: &String, corpus_name: &String) {
 
     let hash = new_layout.iter().zip(old_layout).collect::<HashMap<_, _>>();
 
-    let mut new_corpus: String = corpus.chars()
+    let mut new_corpus: String = corpus
+        .chars()
         .map(|c| hash.get(&c).copied().unwrap_or(c))
         .collect();
 

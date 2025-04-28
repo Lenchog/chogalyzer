@@ -35,9 +35,8 @@ pub struct Args {
     pub cooling: f64,
 
     #[arg(long, action)]
-    pub compact: bool
+    pub compact: bool,
 }
-
 
 #[derive(Eq, Hash, PartialEq, PartialOrd, Debug, Clone)]
 pub enum Finger {
@@ -80,14 +79,16 @@ pub struct Stats {
 const INCLUDE_THUMB_ALT: bool = true;
 const INCLUDE_THUMB_ROLL: bool = true;
 
-
 pub fn load_magic_rules(layout: &String) -> AHashMap<char, char> {
     let layout_letters = load_layout_letters(layout);
     let magic_rules_raw = layout_letters[36..].split('\n').filter(|s| !s.is_empty());
     let mut magic_rules: AHashMap<char, char> = AHashMap::default();
 
     for rule in magic_rules_raw {
-        magic_rules.insert(rule.chars().next().expect("rule is empty"), rule.chars().nth(1).expect("rule has only 1 character"));
+        magic_rules.insert(
+            rule.chars().next().expect("rule is empty"),
+            rule.chars().nth(1).expect("rule has only 1 character"),
+        );
     }
     magic_rules
 }

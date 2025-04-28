@@ -53,18 +53,10 @@ fn generate(
     cooling_rate: f64,
 ) -> ([char; 32], f64, AHashMap<char, char>) {
     let mut rng = thread_rng();
-    let mut layout: ([char; 32], Stats, AHashMap<char, char>) = (
-        layout_raw,
-        Stats::default(),
-        AHashMap::default(),
-    );
+    let mut layout: ([char; 32], Stats, AHashMap<char, char>) =
+        (layout_raw, Stats::default(), AHashMap::default());
     layout.0.shuffle(&mut rng);
-    layout.1 = stats::analyze(
-        corpus.to_string(),
-        layout.0,
-        "generate",
-        &layout.2,
-    );
+    layout.1 = stats::analyze(corpus.to_string(), layout.0, "generate", &layout.2);
     /* let bar = ProgressBar::new(max_iterations);
     multibars.add(bar.clone()); */
     let stat_array: &[Stats; 10] = &Default::default();
@@ -73,12 +65,7 @@ fn generate(
         let letter1 = rng.gen_range(0..layout.0.len());
         let letter2 = rng.gen_range(0..layout.0.len());
         layout.0.swap(letter1, letter2);
-        layout.1 = stats::analyze(
-            corpus.to_string(),
-            layout.0,
-            "generate",
-            &layout.2,
-        );
+        layout.1 = stats::analyze(corpus.to_string(), layout.0, "generate", &layout.2);
         *layout_stats = &layout.1.clone();
     }
     let mut temparature = standard_deviation(&stat_array.clone());
@@ -118,18 +105,9 @@ pub fn attempt_swap(
         new_layout = column_swap(new_layout, rng.gen_range(1..10), rng.gen_range(1..10));
     }
 
-    let magic = get_magic_rules(
-        &corpus.to_string(),
-        new_layout,
-        magic_rules,
-    );
+    let magic = get_magic_rules(&corpus.to_string(), new_layout, magic_rules);
 
-    let new_stats = stats::analyze(
-        corpus.to_string(),
-        new_layout,
-        "generate",
-        &magic,
-    );
+    let new_stats = stats::analyze(corpus.to_string(), new_layout, "generate", &magic);
 
     if new_stats.score > old_stats.score
         || annealing_func(old_stats.score, new_stats.score, temparature)
@@ -227,7 +205,9 @@ pub fn get_magic_rules(
 
     // Iterate and select only unique first-letter bigrams
     for (key, _) in sorted_vec {
-        if !used_first_letters.contains(&key[0])/*  && key[0] != key[1] */ {
+        if !used_first_letters.contains(&key[0])
+        /*  && key[0] != key[1] */
+        {
             sorted_keys.insert(key[0], key[1]);
             used_first_letters.insert(key[0]); // Mark the first letter as used
         }
