@@ -36,6 +36,9 @@ pub struct Args {
 
     #[arg(long, action)]
     pub compact: bool,
+/*
+    #[arg(short, long)]
+    pub algorithm: Algorithm, */
 }
 
 #[derive(Eq, Hash, PartialEq, PartialOrd, Debug, Clone)]
@@ -45,6 +48,22 @@ pub enum Finger {
     Middle,
     Ring,
     Pinky,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct Layout {
+    pub layout: [char; 32],
+    pub stats: Stats,
+    pub magic: AHashMap<char, char>,
+}
+
+#[derive(Default, PartialEq, Clone, Debug)]
+pub enum Algorithm {
+    #[default]
+    SimAnnealing,
+    RandomLayout,
+    GreedySwapping,
+    HillClimbing,
 }
 
 #[derive(Default, Debug, Clone)]

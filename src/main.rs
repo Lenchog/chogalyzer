@@ -30,18 +30,19 @@ fn main() {
                 args.iterations,
                 args.magic_rules,
                 args.cooling,
+                chogalyzer::Algorithm::GreedySwapping,
             );
             output::print_stats(
-                &stats::analyze(corpus.clone(), layout.0, &args.command, &layout.2),
-                layout.0,
-                &layout.2,
-                layout.0[10..15].iter().collect::<String>().as_str(),
+                &stats::analyze(corpus.clone(), layout.layout, &args.command, &layout.magic),
+                layout.layout,
+                &layout.magic,
+                layout.layout[10..15].iter().collect::<String>().as_str(),
             );
             /* for _ in 0..4{
             for magic_rules in 5..10 {
                 let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, magic_rules as usize, args.cooling);
                 println!("{}, {}", magic_rules, layout.1);
-                //output::print_stats(stats::analyze(corpus.clone(), layout.0, &args.command, layout.2.clone()), layout.0, &layout.2);
+                //output::print_stats(stats::analyze(corpus.clone(), layout.layout, &args.command, layout.magic.clone()), layout.0, &layout.2);
             }
 
             } */

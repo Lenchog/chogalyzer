@@ -1,14 +1,13 @@
 use crate::{
-    stats,
-    stats::{bigram_stats, layout_raw_to_table},
-    Finger, Stats,
+    stats::{self, analyze, bigram_stats, layout_raw_to_table},
+    Algorithm, Finger, Layout, Stats,
 };
 use ahash::{AHashMap, AHashSet};
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::thread;
+use std::{thread, time::Instant};
 const THREADS: usize = 8;
 
 #[must_use]
@@ -18,8 +17,9 @@ pub fn generate_threads(
     max_iterations: u64,
     magic_rules: usize,
     cooling_rate: f64,
-) -> ([char; 32], f64, AHashMap<char, char>) {
-    let mut layouts: [([char; 32], f64, AHashMap<char, char>); THREADS] = Default::default();
+    algorithm: Algorithm,
+) -> Layout {
+    let mut layouts: [Layout; THREADS] = Default::default();
     let bars = MultiProgress::new();
     thread::scope(|s| {
         let vec: Vec<_> = (0..THREADS)
@@ -32,6 +32,7 @@ pub fn generate_threads(
                         &bars,
                         magic_rules,
                         cooling_rate,
+                        algorithm.clone(),
                     )
                 })
             })
@@ -51,83 +52,143 @@ fn generate(
     multibars: &MultiProgress,
     magic_rules: usize,
     cooling_rate: f64,
-) -> ([char; 32], f64, AHashMap<char, char>) {
+    algorithm: Algorithm,
+) -> Layout {
+    let mut layout = randomise_layout(layout_raw, corpus.clone(), magic_rules);
+    let mut iterations = 0;
+    //let bar = ProgressBar::new(max_iterations);
+    //multibars.add(bar.clone());
+    // specifically for sim annealing
+    let mut temperature = get_temperature(&mut layout, &corpus);
+
+    let start = Instant::now();
+    while iterations < max_iterations {
+        iterations += 1;
+        let new_layout = if algorithm == Algorithm::HillClimbing {
+            find_best_swap(layout.layout, corpus, magic_rules)
+        } else if algorithm == Algorithm::RandomLayout {
+            randomise_layout(layout_raw, corpus.clone(), magic_rules)
+        } else {
+            attempt_swap(layout.clone(), corpus, magic_rules)
+        };
+        layout = if algorithm == Algorithm::HillClimbing
+            || (algorithm == Algorithm::SimAnnealing
+                && annealing_assess(&layout.stats, &new_layout.stats, temperature))
+            || ((algorithm == Algorithm::GreedySwapping || algorithm == Algorithm::RandomLayout)
+                && new_layout.stats.score > layout.stats.score)
+        {
+            //println!("Layout\n{}\n{}\n{}\n      {}    {}\n", layout.layout[0..9], layout.layout[10..19], layout.layout[20..29], layout.layout[30], layout.layout[31]);
+            println!("{}, {}", start.elapsed().as_millis(), layout.stats.score);
+            new_layout.clone()
+        } else {
+            if algorithm == Algorithm::HillClimbing {
+                return layout;
+            }
+            layout
+        };
+        //bar.inc(1);
+        temperature *= cooling_rate;
+    }
+    layout
+}
+
+fn randomise_layout(layout_raw: [char; 32], corpus: String, magic_rule_number: usize) -> Layout {
     let mut rng = thread_rng();
-    let mut layout: ([char; 32], Stats, AHashMap<char, char>) =
-        (layout_raw, Stats::default(), AHashMap::default());
-    layout.0.shuffle(&mut rng);
-    layout.1 = stats::analyze(corpus.to_string(), layout.0, "generate", &layout.2);
-    /* let bar = ProgressBar::new(max_iterations);
-    multibars.add(bar.clone()); */
+    let mut new_layout_raw = layout_raw;
+    new_layout_raw.shuffle(&mut rng);
+    let magic_rules = get_magic_rules(&corpus, new_layout_raw, magic_rule_number);
+    let stats = analyze(corpus, new_layout_raw, "generate", &magic_rules);
+    Layout {
+        layout: new_layout_raw,
+        magic: magic_rules,
+        stats: stats,
+    }
+}
+
+fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: usize) -> Layout {
+    let old_layout = layout_raw;
+    let old_magic = get_magic_rules(corpus, layout_raw, magic_rules_number);
+    let old_stats = analyze(corpus.to_string(), layout_raw, "generate", &old_magic);
+    let mut best_layout = Layout {
+        layout: old_layout,
+        magic: old_magic,
+        stats: old_stats,
+    };
+    for letter1 in 0..layout_raw.len() {
+        for letter2 in 0..layout_raw.len() {
+            let mut new_layout = old_layout.clone();
+            new_layout.swap(letter1, letter2);
+            let new_magic_rules = get_magic_rules(corpus, new_layout, magic_rules_number);
+            let new_stats = analyze(
+                corpus.to_string(),
+                new_layout,
+                "generate",
+                &new_magic_rules,
+            );
+            if new_stats.score > best_layout.stats.score {
+                best_layout = Layout {
+                    layout: new_layout,
+                    stats: new_stats,
+                    magic: new_magic_rules,
+                };
+            }
+        }
+    }
+    best_layout
+}
+
+fn get_temperature(layout: &mut Layout, corpus: &String) -> f64 {
     let stat_array: &[Stats; 10] = &Default::default();
     for ref mut layout_stats in stat_array {
         let mut rng = rand::thread_rng();
-        let letter1 = rng.gen_range(0..layout.0.len());
-        let letter2 = rng.gen_range(0..layout.0.len());
-        layout.0.swap(letter1, letter2);
-        layout.1 = stats::analyze(corpus.to_string(), layout.0, "generate", &layout.2);
-        *layout_stats = &layout.1.clone();
+        let letter1 = rng.gen_range(0..layout.layout.len());
+        let letter2 = rng.gen_range(0..layout.layout.len());
+        layout.layout.swap(letter1, letter2);
+        layout.stats = stats::analyze(corpus.to_string(), layout.layout, "generate", &layout.magic);
+        *layout_stats = &layout.stats.clone();
     }
-    let mut temparature = standard_deviation(&stat_array.clone());
-    let mut iterations = 0;
-    while iterations < max_iterations {
-        iterations += 1;
-        layout = attempt_swap(
-            layout.0,
-            corpus,
-            layout.1.clone(),
-            layout.2,
-            temparature,
-            magic_rules,
-            iterations,
-        );
-        //bar.inc(1);
-        temparature *= cooling_rate;
-    }
-    (layout.0, layout.1.score, layout.2)
+    standard_deviation(&stat_array.clone())
 }
 
-pub fn attempt_swap(
-    old_layout: [char; 32],
-    corpus: &String,
-    old_stats: Stats,
-    old_magic: AHashMap<char, char>,
-    temparature: f64,
-    magic_rules: usize,
-    iterations: u64,
-) -> ([char; 32], Stats, AHashMap<char, char>) {
+pub fn attempt_swap(old_layout: Layout, corpus: &String, magic_rules: usize) -> Layout {
     let mut rng = rand::thread_rng();
     let mut new_layout = old_layout;
     // swap letters or column
     if rng.gen_range(0..10) > 3 {
-        new_layout.swap(rng.gen_range(0..32), rng.gen_range(0..32));
+        new_layout
+            .layout
+            .swap(rng.gen_range(0..32), rng.gen_range(0..32));
     } else {
-        new_layout = column_swap(new_layout, rng.gen_range(1..10), rng.gen_range(1..10));
+        new_layout.layout = column_swap(
+            new_layout.layout,
+            rng.gen_range(1..10),
+            rng.gen_range(1..10),
+        );
     }
 
-    let magic = get_magic_rules(&corpus.to_string(), new_layout, magic_rules);
+    new_layout.magic = get_magic_rules(&corpus.to_string(), new_layout.layout, magic_rules);
 
-    let new_stats = stats::analyze(corpus.to_string(), new_layout, "generate", &magic);
-
-    if new_stats.score > old_stats.score
-        || annealing_func(old_stats.score, new_stats.score, temparature)
-    {
-        //println!("{iterations}, {}", new_stats.score);
-        (new_layout, new_stats, magic)
-    } else {
-        (old_layout, old_stats, old_magic)
-    }
+    new_layout.stats = stats::analyze(
+        corpus.to_string(),
+        new_layout.layout,
+        "generate",
+        &new_layout.magic,
+    );
+    new_layout
 }
 
-fn compare_layouts(
-    layouts: &[([char; 32], f64, AHashMap<char, char>); THREADS],
-) -> ([char; 32], f64, AHashMap<char, char>) {
-    let mut best_score = layouts[0].1;
+pub fn annealing_assess(old_stats: &Stats, new_stats: &Stats, temperature: f64) -> bool {
+    new_stats.score > old_stats.score
+        || annealing_func(old_stats.score, new_stats.score, temperature)
+}
+
+fn compare_layouts(layouts: &[Layout; THREADS]) -> Layout {
+    let mut best_score = layouts[0].stats.score;
     let mut best_layout = 0;
-    for (i, item) in layouts.iter().enumerate() {
-        if item.1 > best_score {
+    for (i, layout) in layouts.iter().enumerate() {
+        if layout.stats.score > best_score {
             best_layout = i;
-            best_score = item.1;
+            best_score = layout.stats.score;
         }
     }
     layouts[best_layout].clone()
@@ -146,10 +207,10 @@ fn standard_deviation(stat_array: &[Stats; 10]) -> f64 {
     let variance = sum / stat_array.len() as f64;
     variance.sqrt()
 }
-fn annealing_func(old: f64, new: f64, temparature: f64) -> bool {
+fn annealing_func(old: f64, new: f64, temperature: f64) -> bool {
     let mut rng = ThreadRng::default();
     let delta: f64 = new - old;
-    let probability = 1.0 / (1.0 + (delta / temparature).exp());
+    let probability = 1.0 / (1.0 + (delta / temperature).exp());
     rng.gen_range(0.0..1.0) > probability
 }
 
