@@ -5,9 +5,10 @@ use crate::{
 use ahash::{AHashMap, AHashSet};
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
+use std::io::Write;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::{thread, time::Instant};
+use std::{fs::OpenOptions, thread, time::Instant};
 const THREADS: usize = 8;
 
 #[must_use]
@@ -56,8 +57,8 @@ fn generate(
 ) -> Layout {
     let mut layout = randomise_layout(layout_raw, corpus.clone(), magic_rules);
     let mut iterations = 0;
-    //let bar = ProgressBar::new(max_iterations);
-    //multibars.add(bar.clone());
+    /* let bar = ProgressBar::new(max_iterations);
+    multibars.add(bar.clone()); */
     // specifically for sim annealing
     let mut temperature = get_temperature(&mut layout, &corpus);
 
@@ -77,8 +78,13 @@ fn generate(
             || ((algorithm == Algorithm::GreedySwapping || algorithm == Algorithm::RandomLayout)
                 && new_layout.stats.score > layout.stats.score)
         {
-            //println!("Layout\n{}\n{}\n{}\n      {}    {}\n", layout.layout[0..9], layout.layout[10..19], layout.layout[20..29], layout.layout[30], layout.layout[31]);
-            println!("{}, {}", start.elapsed().as_millis(), layout.stats.score);
+            let mut data_file = OpenOptions::new()
+                .append(true)
+                .open("data.txt")
+                .expect("cannot open file");
+            data_file
+                .write(format!("{}, {}\n", start.elapsed().as_millis(), layout.stats.score).as_bytes())
+                .expect("write failed");
             new_layout.clone()
         } else {
             if algorithm == Algorithm::HillClimbing {
@@ -138,16 +144,16 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
 }
 
 fn get_temperature(layout: &mut Layout, corpus: &String) -> f64 {
-    let stat_array: &[Stats; 10] = &Default::default();
-    for ref mut layout_stats in stat_array {
+    let mut score_array: [f64; 10] = Default::default();
+    for i in 0..score_array.len() {
         let mut rng = rand::thread_rng();
         let letter1 = rng.gen_range(0..layout.layout.len());
         let letter2 = rng.gen_range(0..layout.layout.len());
         layout.layout.swap(letter1, letter2);
         layout.stats = stats::analyze(corpus.to_string(), layout.layout, "generate", &layout.magic);
-        *layout_stats = &layout.stats.clone();
+        score_array[i] = layout.stats.score;
     }
-    standard_deviation(&stat_array.clone())
+    standard_deviation(&score_array.clone())
 }
 
 pub fn attempt_swap(old_layout: Layout, corpus: &String, magic_rules: usize) -> Layout {
@@ -194,17 +200,17 @@ fn compare_layouts(layouts: &[Layout; THREADS]) -> Layout {
     layouts[best_layout].clone()
 }
 
-fn standard_deviation(stat_array: &[Stats; 10]) -> f64 {
+fn standard_deviation(score_array: &[f64; 10]) -> f64 {
     let mut sum = 0.0;
-    for layout in stat_array {
-        sum += layout.score;
+    for score in score_array {
+        sum += score;
     }
-    let mean = sum / stat_array.len() as f64;
+    let mean = sum / score_array.len() as f64;
     sum = 0.0;
-    for layout in stat_array {
-        sum += (layout.score - mean).powf(2.0);
+    for score in score_array {
+        sum += (score - mean).powf(2.0);
     }
-    let variance = sum / stat_array.len() as f64;
+    let variance = sum / score_array.len() as f64;
     variance.sqrt()
 }
 fn annealing_func(old: f64, new: f64, temperature: f64) -> bool {
