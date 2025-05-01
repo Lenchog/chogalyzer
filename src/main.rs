@@ -4,7 +4,7 @@ use std::{
     io::Write,
 };
 
-use chogalyzer::{generation, load_layout, load_magic_rules, output, stats, Args};
+use chogalyzer::{generation, load_layout, load_magic_rules, output, stats, Algorithm, Args};
 use clap::Parser;
 
 fn main() {
@@ -30,7 +30,7 @@ fn main() {
                 args.iterations,
                 args.magic_rules,
                 args.cooling,
-                chogalyzer::Algorithm::GreedySwapping,
+                chogalyzer::Algorithm::Hybrid,
             );
             output::print_stats(
                 &stats::analyze(corpus.clone(), layout.layout, &args.command, &layout.magic),
@@ -38,14 +38,22 @@ fn main() {
                 &layout.magic,
                 layout.layout[10..15].iter().collect::<String>().as_str(),
             );
-            /* for _ in 0..4{
-            for magic_rules in 5..10 {
-                let layout = generation::generate_threads(layout_raw, &corpus, args.iterations, magic_rules as usize, args.cooling);
-                println!("{}, {}", magic_rules, layout.1);
-                //output::print_stats(stats::analyze(corpus.clone(), layout.layout, &args.command, layout.magic.clone()), layout.0, &layout.2);
+        }
+        "get_data" => {
+            let algorithms = [ Algorithm::GreedySwapping, Algorithm::SimAnnealing, Algorithm::HillClimbing, Algorithm::Hybrid, Algorithm::RandomLayout ];
+            for _ in 0..4 {
+                for algorithm in &algorithms {
+                    let _ = generation::generate_threads(
+                        layout_raw,
+                        &corpus,
+                        args.iterations,
+                        args.magic_rules,
+                        args.cooling,
+                        algorithm.clone(),
+                    );
+                }
             }
-
-            } */
+            println!("done");
         }
         "convert" => convert(&args.layout, &args.corpus),
         "sfb" => output::print_ngrams(&ngram_vec, stats.bigrams, "SFB".to_string(), &args),

@@ -5,7 +5,7 @@ use crate::{
 use ahash::{AHashMap, AHashSet};
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
-use std::io::Write;
+use std::{io::Write, usize};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::{fs::OpenOptions, thread, time::Instant};
@@ -24,8 +24,11 @@ pub fn generate_threads(
     let bars = MultiProgress::new();
     thread::scope(|s| {
         let vec: Vec<_> = (0..THREADS)
-            .map(|_| {
-                s.spawn(|| {
+            .map(|runid| {
+                s.spawn({
+                    let bars = bars.clone();
+                    let algorithm = algorithm.clone();
+                    move || {
                     generate(
                         layout_raw,
                         corpus,
@@ -33,9 +36,10 @@ pub fn generate_threads(
                         &bars,
                         magic_rules,
                         cooling_rate,
-                        algorithm.clone(),
+                        algorithm,
+                        runid
                     )
-                })
+                }})
             })
             .collect();
         for (i, handle) in vec.into_iter().enumerate() {
@@ -54,19 +58,26 @@ fn generate(
     magic_rules: usize,
     cooling_rate: f64,
     algorithm: Algorithm,
+    runid: usize,
 ) -> Layout {
     let mut layout = randomise_layout(layout_raw, corpus.clone(), magic_rules);
     let mut iterations = 0;
     /* let bar = ProgressBar::new(max_iterations);
     multibars.add(bar.clone()); */
     // specifically for sim annealing
-    let mut temperature = get_temperature(&mut layout, &corpus);
-
+    let mut temperature = get_temperature(&mut layout, corpus);
     let start = Instant::now();
+    let hill_switch_temp = 4700.0;
+    let required_score = 10000.0;
     while iterations < max_iterations {
         iterations += 1;
-        let new_layout = if algorithm == Algorithm::HillClimbing {
-            find_best_swap(layout.layout, corpus, magic_rules)
+        let new_layout = if algorithm == Algorithm::HillClimbing || (algorithm == Algorithm::Hybrid && temperature <= hill_switch_temp){
+            let find_best_swap = find_best_swap(layout.layout, corpus, magic_rules);
+            if find_best_swap.1 {
+                println!("0 {} {}", algorithm, layout.stats.score);
+                return find_best_swap.0;
+            }
+            find_best_swap.0
         } else if algorithm == Algorithm::RandomLayout {
             randomise_layout(layout_raw, corpus.clone(), magic_rules)
         } else {
@@ -77,14 +88,19 @@ fn generate(
                 && annealing_assess(&layout.stats, &new_layout.stats, temperature))
             || ((algorithm == Algorithm::GreedySwapping || algorithm == Algorithm::RandomLayout)
                 && new_layout.stats.score > layout.stats.score)
+            || (algorithm == Algorithm::Hybrid && temperature <= hill_switch_temp)
         {
             let mut data_file = OpenOptions::new()
                 .append(true)
                 .open("data.txt")
                 .expect("cannot open file");
             data_file
-                .write(format!("{}, {}\n", start.elapsed().as_millis(), layout.stats.score).as_bytes())
+                .write(format!("{} {} {} {}\n", algorithm, runid, start.elapsed().as_millis(), layout.stats.score).as_bytes())
                 .expect("write failed");
+            if new_layout.stats.score >= required_score {
+                println!("1 {} {}", algorithm, start.elapsed().as_millis());
+                return new_layout;
+            };
             new_layout.clone()
         } else {
             if algorithm == Algorithm::HillClimbing {
@@ -95,6 +111,7 @@ fn generate(
         //bar.inc(1);
         temperature *= cooling_rate;
     }
+    println!("0 {} {}", algorithm, layout.stats.score);
     layout
 }
 
@@ -107,11 +124,11 @@ fn randomise_layout(layout_raw: [char; 32], corpus: String, magic_rule_number: u
     Layout {
         layout: new_layout_raw,
         magic: magic_rules,
-        stats: stats,
+        stats,
     }
 }
 
-fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: usize) -> Layout {
+fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: usize) -> (Layout, bool) {
     let old_layout = layout_raw;
     let old_magic = get_magic_rules(corpus, layout_raw, magic_rules_number);
     let old_stats = analyze(corpus.to_string(), layout_raw, "generate", &old_magic);
@@ -120,9 +137,10 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
         magic: old_magic,
         stats: old_stats,
     };
-    for letter1 in 0..layout_raw.len() {
-        for letter2 in 0..layout_raw.len() {
-            let mut new_layout = old_layout.clone();
+    let mut has_changed = false;
+    for (letter1, _) in layout_raw.iter().enumerate() {
+        for letter2 in (letter1 + 1)..layout_raw.len() {
+            let mut new_layout = old_layout;
             new_layout.swap(letter1, letter2);
             let new_magic_rules = get_magic_rules(corpus, new_layout, magic_rules_number);
             let new_stats = analyze(
@@ -132,6 +150,7 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
                 &new_magic_rules,
             );
             if new_stats.score > best_layout.stats.score {
+                has_changed = true;
                 best_layout = Layout {
                     layout: new_layout,
                     stats: new_stats,
@@ -140,7 +159,10 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
             }
         }
     }
-    best_layout
+    if !has_changed {
+        return (best_layout, true)
+    };
+    (best_layout, false)
 }
 
 fn get_temperature(layout: &mut Layout, corpus: &String) -> f64 {

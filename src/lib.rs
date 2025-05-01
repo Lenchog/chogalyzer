@@ -64,6 +64,18 @@ pub enum Algorithm {
     RandomLayout,
     GreedySwapping,
     HillClimbing,
+    Hybrid,
+}
+impl std::fmt::Display for Algorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Algorithm::SimAnnealing => write!(f, "SimAnnealing"),
+            Algorithm::RandomLayout => write!(f, "RandomLayout"),
+            Algorithm::GreedySwapping => write!(f, "GreedySwapping"),
+            Algorithm::HillClimbing => write!(f, "HillClimbing"),
+            Algorithm::Hybrid => write!(f, "Hybrid"),
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone)]
