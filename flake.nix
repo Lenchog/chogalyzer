@@ -145,6 +145,9 @@
 								rust-analyzer
 								lldb
                 toolchain
+								(pkgs.python3.withPackages (python-pkgs: [
+									python-pkgs.matplotlib
+								]))
               ]
               ++ build-deps;
           };
