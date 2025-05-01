@@ -36,7 +36,7 @@ pub struct Args {
 
     #[arg(long, action)]
     pub compact: bool,
-/*
+    /*
     #[arg(short, long)]
     pub algorithm: Algorithm, */
 }

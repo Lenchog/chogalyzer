@@ -40,7 +40,13 @@ fn main() {
             );
         }
         "get_data" => {
-            let algorithms = [ Algorithm::GreedySwapping, Algorithm::SimAnnealing, Algorithm::HillClimbing, Algorithm::Hybrid, Algorithm::RandomLayout ];
+            let algorithms = [
+                Algorithm::GreedySwapping,
+                Algorithm::SimAnnealing,
+                Algorithm::HillClimbing,
+                Algorithm::Hybrid,
+                Algorithm::RandomLayout,
+            ];
             for _ in 0..4 {
                 for algorithm in &algorithms {
                     let _ = generation::generate_threads(

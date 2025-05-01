@@ -5,10 +5,10 @@ use crate::{
 use ahash::{AHashMap, AHashSet};
 use indicatif::MultiProgress;
 use indicatif::ProgressBar;
-use std::{io::Write, usize};
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::{fs::OpenOptions, thread, time::Instant};
+use std::{io::Write, usize};
 const THREADS: usize = 8;
 
 #[must_use]
@@ -29,17 +29,18 @@ pub fn generate_threads(
                     let bars = bars.clone();
                     let algorithm = algorithm.clone();
                     move || {
-                    generate(
-                        layout_raw,
-                        corpus,
-                        max_iterations,
-                        &bars,
-                        magic_rules,
-                        cooling_rate,
-                        algorithm,
-                        runid
-                    )
-                }})
+                        generate(
+                            layout_raw,
+                            corpus,
+                            max_iterations,
+                            &bars,
+                            magic_rules,
+                            cooling_rate,
+                            algorithm,
+                            runid,
+                        )
+                    }
+                })
             })
             .collect();
         for (i, handle) in vec.into_iter().enumerate() {
@@ -71,7 +72,9 @@ fn generate(
     let required_score = 10000.0;
     while iterations < max_iterations {
         iterations += 1;
-        let new_layout = if algorithm == Algorithm::HillClimbing || (algorithm == Algorithm::Hybrid && temperature <= hill_switch_temp){
+        let new_layout = if algorithm == Algorithm::HillClimbing
+            || (algorithm == Algorithm::Hybrid && temperature <= hill_switch_temp)
+        {
             let find_best_swap = find_best_swap(layout.layout, corpus, magic_rules);
             if find_best_swap.1 {
                 println!("0 {} {}", algorithm, layout.stats.score);
@@ -95,7 +98,16 @@ fn generate(
                 .open("data.txt")
                 .expect("cannot open file");
             data_file
-                .write(format!("{} {} {} {}\n", algorithm, runid, start.elapsed().as_millis(), layout.stats.score).as_bytes())
+                .write(
+                    format!(
+                        "{} {} {} {}\n",
+                        algorithm,
+                        runid,
+                        start.elapsed().as_millis(),
+                        layout.stats.score
+                    )
+                    .as_bytes(),
+                )
                 .expect("write failed");
             if new_layout.stats.score >= required_score {
                 println!("1 {} {}", algorithm, start.elapsed().as_millis());
@@ -128,7 +140,11 @@ fn randomise_layout(layout_raw: [char; 32], corpus: String, magic_rule_number: u
     }
 }
 
-fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: usize) -> (Layout, bool) {
+fn find_best_swap(
+    layout_raw: [char; 32],
+    corpus: &String,
+    magic_rules_number: usize,
+) -> (Layout, bool) {
     let old_layout = layout_raw;
     let old_magic = get_magic_rules(corpus, layout_raw, magic_rules_number);
     let old_stats = analyze(corpus.to_string(), layout_raw, "generate", &old_magic);
@@ -143,12 +159,7 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
             let mut new_layout = old_layout;
             new_layout.swap(letter1, letter2);
             let new_magic_rules = get_magic_rules(corpus, new_layout, magic_rules_number);
-            let new_stats = analyze(
-                corpus.to_string(),
-                new_layout,
-                "generate",
-                &new_magic_rules,
-            );
+            let new_stats = analyze(corpus.to_string(), new_layout, "generate", &new_magic_rules);
             if new_stats.score > best_layout.stats.score {
                 has_changed = true;
                 best_layout = Layout {
@@ -160,7 +171,7 @@ fn find_best_swap(layout_raw: [char; 32], corpus: &String, magic_rules_number: u
         }
     }
     if !has_changed {
-        return (best_layout, true)
+        return (best_layout, true);
     };
     (best_layout, false)
 }
