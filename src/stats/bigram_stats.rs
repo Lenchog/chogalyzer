@@ -15,7 +15,6 @@ pub fn bigram_stats(
     let mut insert_bigram = false;
     let mut bigram_weight = 0;
 
-    stats.bigrams += 1;
     if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
         if key1.finger == key2.finger {
             let sfr = key1 == key2;

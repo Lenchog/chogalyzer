@@ -99,10 +99,10 @@ pub struct Stats {
     weak_red: i64,
     red: i64,
     heatmap: i64,
+    column_pen: i64,
     thumb_stat: u32,
-    pub bigrams: u32,
     pub skipgrams: u32,
-    pub trigrams: u32,
+    pub chars: u32,
     pub ngram_table: AHashMap<[char; 3], u32>,
     pub bad_bigrams: AHashMap<[char; 2], u32>,
 }

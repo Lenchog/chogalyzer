@@ -63,13 +63,12 @@ fn generate(
 ) -> Layout {
     let mut layout = randomise_layout(layout_raw, corpus.clone(), magic_rules);
     let mut iterations = 0;
-    /* let bar = ProgressBar::new(max_iterations);
-    multibars.add(bar.clone()); */
+    let bar = ProgressBar::new(max_iterations);
+    multibars.add(bar.clone());
     // specifically for sim annealing
     let mut temperature = get_temperature(&mut layout, corpus);
     let start = Instant::now();
     let hill_switch_temp = 4700.0;
-    let required_score = 10000.0;
     while iterations < max_iterations {
         iterations += 1;
         let new_layout = if algorithm == Algorithm::HillClimbing
@@ -77,7 +76,7 @@ fn generate(
         {
             let find_best_swap = find_best_swap(layout.layout, corpus, magic_rules);
             if find_best_swap.1 {
-                println!("0 {} {}", algorithm, layout.stats.score);
+                //println!("0 {} {}", algorithm, layout.stats.score);
                 return find_best_swap.0;
             }
             find_best_swap.0
@@ -109,10 +108,10 @@ fn generate(
                     .as_bytes(),
                 )
                 .expect("write failed");
-            if new_layout.stats.score >= required_score {
-                println!("1 {} {}", algorithm, start.elapsed().as_millis());
+            /* if new_layout.stats.score >= required_score {
+                //println!("1 {} {}", algorithm, start.elapsed().as_millis());
                 return new_layout;
-            };
+            }; */
             new_layout.clone()
         } else {
             if algorithm == Algorithm::HillClimbing {
@@ -120,10 +119,10 @@ fn generate(
             }
             layout
         };
-        //bar.inc(1);
+        bar.inc(1);
         temperature *= cooling_rate;
     }
-    println!("0 {} {}", algorithm, layout.stats.score);
+    //println!("0 {} {}", algorithm, layout.stats.score);
     layout
 }
 

@@ -76,37 +76,38 @@ pub fn print_stats(
 
     layout_table.with(Style::sharp());
 
-    let sfbpercent = stats.sfb as f32 * 100.0 / stats.bigrams as f32;
-    let sfrpercent = stats.sfr as f32 * 100.0 / stats.bigrams as f32;
+    let sfbpercent = stats.sfb as f32 * 100.0 / stats.chars as f32;
+    let sfrpercent = stats.sfr as f32 * 100.0 / stats.chars as f32;
     let sfspercent = stats.sfs as f32 * 100.0 / stats.skipgrams as f32;
-    let lsbpercent = stats.lsb as f32 * 100.0 / stats.bigrams as f32;
+    let lsbpercent = stats.lsb as f32 * 100.0 / stats.chars as f32;
     let lsspercent = stats.lss as f32 * 100.0 / stats.skipgrams as f32;
-    let hsbpercent = stats.hsb as f32 * 100.0 / stats.bigrams as f32;
+    let hsbpercent = stats.hsb as f32 * 100.0 / stats.chars as f32;
     let hsspercent = stats.hss as f32 * 100.0 / stats.skipgrams as f32;
-    let fsbpercent = stats.fsb as f32 * 100.0 / stats.bigrams as f32;
+    let fsbpercent = stats.fsb as f32 * 100.0 / stats.chars as f32;
     let fsspercent = stats.fss as f32 * 100.0 / stats.skipgrams as f32;
-    let altpercent = stats.alt as f32 * 100.0 / stats.trigrams as f32;
-    let inrollpercent = stats.inroll as f32 * 100.0 / stats.trigrams as f32;
-    let outrollpercent = stats.outroll as f32 * 100.0 / stats.trigrams as f32;
-    let rollpercent = (stats.inroll + stats.outroll) as f32 * 100.0 / stats.trigrams as f32;
-    let inthreerollpercent = stats.inthreeroll as f32 * 100.0 / stats.trigrams as f32;
-    let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.trigrams as f32;
+    let altpercent = stats.alt as f32 * 100.0 / stats.chars as f32;
+    let inrollpercent = stats.inroll as f32 * 100.0 / stats.chars as f32;
+    let outrollpercent = stats.outroll as f32 * 100.0 / stats.chars as f32;
+    let rollpercent = (stats.inroll + stats.outroll) as f32 * 100.0 / stats.chars as f32;
+    let inthreerollpercent = stats.inthreeroll as f32 * 100.0 / stats.chars as f32;
+    let outthreerollpercent = stats.outthreeroll as f32 * 100.0 / stats.chars as f32;
     let threerollpercent =
-        (stats.inthreeroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+        (stats.inthreeroll + stats.outthreeroll) as f32 * 100.0 / stats.chars as f32;
     let inrolltalpercent =
-        (stats.inroll + stats.inthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+        (stats.inroll + stats.inthreeroll) as f32 * 100.0 / stats.chars as f32;
     let outrolltalpercent =
-        (stats.outroll + stats.outthreeroll) as f32 * 100.0 / stats.trigrams as f32;
+        (stats.outroll + stats.outthreeroll) as f32 * 100.0 / stats.chars as f32;
     let rolltalpercent =
         (stats.inroll + stats.outroll + stats.inthreeroll + stats.outthreeroll) as f32 * 100.0
-            / stats.trigrams as f32;
-    let weakredpercent = stats.weak_red as f32 * 100.0 / stats.trigrams as f32;
-    let redpercent = (stats.red + stats.weak_red) as f32 * 100.0 / stats.trigrams as f32;
+            / stats.chars as f32;
+    let weakredpercent = stats.weak_red as f32 * 100.0 / stats.chars as f32;
+    let redpercent = (stats.red + stats.weak_red) as f32 * 100.0 / stats.chars as f32;
 
     let mut general = Builder::default();
     general.push_record(["Score", &stats.score.to_string()]);
     general.push_record(["Fspeed", &stats.fspeed.to_string()]);
     general.push_record(["Heatmap", &stats.heatmap.to_string()]);
+    general.push_record(["Finger usage penalty", &stats.column_pen.to_string()]);
     general.push_record(["Alt", &(altpercent.to_string() + "%")]);
     general.push_record(["SFR", &(sfrpercent.to_string() + "%")]);
     general.push_record(["Red", &(redpercent.to_string() + "%")]);

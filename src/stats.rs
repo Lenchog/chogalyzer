@@ -37,6 +37,7 @@ pub fn analyze(
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
         let epic_previous_key = &layout[&epic_previous_letter];
+        stats.chars += 1;
 
         *char_freq.entry(letter).or_insert(0) += 1;
 
@@ -71,7 +72,6 @@ pub fn analyze(
         let trigram =
             trigram_stats::trigram_stats(skip_previous_key, previous_key, key, command, stats);
         stats = trigram.0;
-        stats.trigrams += 1;
         if trigram.1 {
             *stats
                 .ngram_table
@@ -85,7 +85,7 @@ pub fn analyze(
         previous_letter = letter;
     }
     if !(INCLUDE_THUMB_ALT || INCLUDE_THUMB_ROLL) {
-        stats.trigrams -= stats.thumb_stat;
+        stats.chars -= stats.thumb_stat;
     }
     #[rustfmt::skip]
     let weighting: [u32; 32] = [
@@ -94,14 +94,32 @@ pub fn analyze(
         8,  9, 8, 7, 9, 9, 7, 8, 9, 8, 
                   0,       0,
     ];
+    let max_freq = AHashMap::from([
+        (Finger::Pinky, 7),
+        (Finger::Ring, 12),
+        (Finger::Middle, 13),
+        (Finger::Index, 15),
+        (Finger::Thumb, 25),
+    ]);
+    let mut columns: AHashMap<(Finger, u8), u32> = AHashMap::new();
     for i in 0..layout_letters.len() {
         if char_freq.contains_key(&layout_letters[i]) {
             stats.heatmap += i64::from(weighting[i] * char_freq[&layout_letters[i]]);
+            let key = &layout[&layout_letters[i]];
+            *columns.entry((key.finger.clone(), key.hand)).or_insert(0) += char_freq[&layout_letters[i]];
         }
     }
+    for (column, freq) in columns {
+        let penalty = f32::max(freq as f32 - max_freq[&column.0] as f32 / 100.0 * stats.chars as f32, 0.0) as i64;
+        /* if penalty > 0 {
+            dbg!(column);
+        } */
+        stats.column_pen += penalty;
+    };
     let weights = Stats {
         score: 0.0,
         heatmap: -300,
+        column_pen: -10000,
         fspeed: -200,
         sfb: 0,
         sfr: 0,
@@ -120,9 +138,8 @@ pub fn analyze(
         weak_red: -1500,
         red: -300,
         thumb_stat: 0,
-        bigrams: 0,
+        chars: 0,
         skipgrams: 0,
-        trigrams: 0,
         ngram_table: AHashMap::default(),
         bad_bigrams: AHashMap::default(),
     };
@@ -135,6 +152,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     let mut score = 0;
     score += stats.fspeed * weighting.fspeed / 7;
     score += stats.heatmap * weighting.heatmap / 100;
+    score += stats.column_pen * weighting.column_pen;
     score += stats.lsb * weighting.lsb;
     score += stats.lss * weighting.lss;
     score += stats.fsb * weighting.fsb;

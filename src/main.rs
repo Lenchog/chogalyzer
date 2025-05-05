@@ -30,7 +30,7 @@ fn main() {
                 args.iterations,
                 args.magic_rules,
                 args.cooling,
-                chogalyzer::Algorithm::Hybrid,
+                chogalyzer::Algorithm::SimAnnealing,
             );
             output::print_stats(
                 &stats::analyze(corpus.clone(), layout.layout, &args.command, &layout.magic),
@@ -62,37 +62,37 @@ fn main() {
             println!("done");
         }
         "convert" => convert(&args.layout, &args.corpus),
-        "sfb" => output::print_ngrams(&ngram_vec, stats.bigrams, "SFB".to_string(), &args),
-        "sfr" => output::print_ngrams(&ngram_vec, stats.bigrams, "SFR".to_string(), &args),
+        "sfb" => output::print_ngrams(&ngram_vec, stats.chars, "SFB".to_string(), &args),
+        "sfr" => output::print_ngrams(&ngram_vec, stats.chars, "SFR".to_string(), &args),
         "sfs" => output::print_ngrams(&ngram_vec, stats.skipgrams, "SFS".to_string(), &args),
-        "lsbs" => output::print_ngrams(&ngram_vec, stats.bigrams, "LSB".to_string(), &args),
+        "lsbs" => output::print_ngrams(&ngram_vec, stats.chars, "LSB".to_string(), &args),
         "lss" => output::print_ngrams(&ngram_vec, stats.skipgrams, "LSS".to_string(), &args),
-        "fsb" => output::print_ngrams(&ngram_vec, stats.bigrams, "FSB".to_string(), &args),
-        "hsb" => output::print_ngrams(&ngram_vec, stats.bigrams, "HSB".to_string(), &args),
+        "fsb" => output::print_ngrams(&ngram_vec, stats.chars, "FSB".to_string(), &args),
+        "hsb" => output::print_ngrams(&ngram_vec, stats.chars, "HSB".to_string(), &args),
         "fss" => output::print_ngrams(&ngram_vec, stats.skipgrams, "FSS".to_string(), &args),
-        "alt" => output::print_ngrams(&ngram_vec, stats.trigrams, "Alt".to_string(), &args),
-        "inroll" => output::print_ngrams(&ngram_vec, stats.trigrams, "Inroll".to_string(), &args),
-        "outroll" => output::print_ngrams(&ngram_vec, stats.trigrams, "Outroll".to_string(), &args),
+        "alt" => output::print_ngrams(&ngram_vec, stats.chars, "Alt".to_string(), &args),
+        "inroll" => output::print_ngrams(&ngram_vec, stats.chars, "Inroll".to_string(), &args),
+        "outroll" => output::print_ngrams(&ngram_vec, stats.chars, "Outroll".to_string(), &args),
         "inthreeroll" => {
-            output::print_ngrams(&ngram_vec, stats.trigrams, "Inthreeroll".to_string(), &args);
+            output::print_ngrams(&ngram_vec, stats.chars, "Inthreeroll".to_string(), &args);
         }
         "outthreeroll" => {
             output::print_ngrams(
                 &ngram_vec,
-                stats.trigrams,
+                stats.chars,
                 "Outthreeroll".to_string(),
                 &args,
             );
         }
-        "red" => output::print_ngrams(&ngram_vec, stats.trigrams, "Red".to_string(), &args),
-        "weak" => output::print_ngrams(&ngram_vec, stats.trigrams, "Weak".to_string(), &args),
-        "thumb" => output::print_ngrams(&ngram_vec, stats.trigrams, "Thumb".to_string(), &args),
-        "bigrams" => output::print_ngrams(&ngram_vec, stats.bigrams, "Bigrams".to_string(), &args),
+        "red" => output::print_ngrams(&ngram_vec, stats.chars, "Red".to_string(), &args),
+        "weak" => output::print_ngrams(&ngram_vec, stats.chars, "Weak".to_string(), &args),
+        "thumb" => output::print_ngrams(&ngram_vec, stats.chars, "Thumb".to_string(), &args),
+        "bigrams" => output::print_ngrams(&ngram_vec, stats.chars, "Bigrams".to_string(), &args),
         "skipgrams" => {
             output::print_ngrams(&ngram_vec, stats.skipgrams, "Skipgrams".to_string(), &args)
         }
         "trigrams" => {
-            output::print_ngrams(&ngram_vec, stats.trigrams, "Trigrams".to_string(), &args)
+            output::print_ngrams(&ngram_vec, stats.chars, "Trigrams".to_string(), &args)
         }
         _ => println!("invalid command"),
     }
