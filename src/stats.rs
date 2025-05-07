@@ -91,14 +91,14 @@ pub fn analyze(
     let weighting: [u32; 32] = [
         12, 4, 3, 6, 7, 7, 6, 3, 4, 12, 
         3,  1, 0, 0, 6, 6, 0, 0, 1, 3, 
-        8,  9, 8, 7, 9, 9, 7, 8, 9, 8, 
+        8,  9, 8, 4, 9, 9, 4, 8, 9, 8, 
                   0,       0,
     ];
     let max_freq = AHashMap::from([
         (Finger::Pinky, 7),
         (Finger::Ring, 12),
         (Finger::Middle, 13),
-        (Finger::Index, 15),
+        (Finger::Index, 13),
         (Finger::Thumb, 25),
     ]);
     let mut columns: AHashMap<(Finger, u8), u32> = AHashMap::new();
@@ -111,14 +111,12 @@ pub fn analyze(
     }
     for (column, freq) in columns {
         let penalty = f32::max(freq as f32 - max_freq[&column.0] as f32 / 100.0 * stats.chars as f32, 0.0) as i64;
-        /* if penalty > 0 {
-            dbg!(column);
-        } */
         stats.column_pen += penalty;
     };
     let weights = Stats {
         score: 0.0,
-        heatmap: -300,
+        //heatmap: -500,
+        heatmap: 0,
         column_pen: -10000,
         fspeed: -200,
         sfb: 0,
@@ -128,14 +126,14 @@ pub fn analyze(
         hsb: -100,
         hss: -20,
         fss: -100,
-        lsb: -100,
-        lss: -20,
+        lsb: -200,
+        lss: -40,
         inroll: 100,
         outroll: 50,
         alt: 0,
         inthreeroll: 300,
         outthreeroll: 150,
-        weak_red: -1500,
+        weak_red: -2000,
         red: -300,
         thumb_stat: 0,
         chars: 0,

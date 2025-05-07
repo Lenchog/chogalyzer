@@ -9,7 +9,7 @@ use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::{fs::OpenOptions, thread, time::Instant};
 use std::{io::Write, usize};
-const THREADS: usize = 8;
+const THREADS: usize = 12;
 
 #[must_use]
 pub fn generate_threads(
