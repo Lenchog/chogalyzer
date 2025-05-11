@@ -68,7 +68,7 @@ fn generate(
     // specifically for sim annealing
     let mut temperature = get_temperature(&mut layout, corpus);
     let start = Instant::now();
-    let hill_switch_temp = 4700.0;
+    let hill_switch_temp = 10.0;
     while iterations < max_iterations {
         iterations += 1;
         let new_layout = if algorithm == Algorithm::HillClimbing
