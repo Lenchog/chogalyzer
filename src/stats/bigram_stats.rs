@@ -187,7 +187,8 @@ pub fn scissor(key1: &Key, key2: &Key) -> u8 {
         && (((key1.finger == Finger::Pinky || key1.finger == Finger::Index)
             && (key2.finger == Finger::Middle || key2.finger == Finger::Ring))
             || ((key2.finger == Finger::Pinky || key2.finger == Finger::Index)
-                && (key1.finger == Finger::Middle || key1.finger == Finger::Ring)))
+                && (key1.finger == Finger::Middle || key1.finger == Finger::Ring))
+            || (key1.finger == Finger::Middle && key2.finger == Finger::Ring) || (key2.finger == Finger::Middle && key1.finger == Finger::Ring))
     {
         return distance;
     }
