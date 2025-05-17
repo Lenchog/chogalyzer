@@ -35,9 +35,10 @@ pub fn bigram_stats(
             } else {
                 1
             };
-            stats.fspeed += weight * finger_weights[&key1.finger] * distance as i64;
+            let penalty = weight * finger_weights[&key1.finger] * distance as i64;
+            stats.fspeed += penalty;
             if get_bad_bigrams {
-                bigram_weight += 5 * finger_weights[&key1.finger] * distance as i64;
+                bigram_weight += 5 * penalty;
             }
             if (!sfr && command == "sfb") || (sfr && command == "sfr") {
                 insert_bigram = true;
@@ -46,7 +47,7 @@ pub fn bigram_stats(
             if key1.lateral || key2.lateral {
                 stats.lsb += 1;
                 if get_bad_bigrams {
-                    bigram_weight += 30;
+                    bigram_weight += 15;
                 }
                 if command == "lsb" {
                     insert_bigram = true;
@@ -56,7 +57,7 @@ pub fn bigram_stats(
                 1 => {
                     stats.hsb += 1;
                     if get_bad_bigrams {
-                        bigram_weight += 30;
+                        bigram_weight += 15;
                     }
                     if command == "hsb" {
                         insert_bigram = true;
@@ -65,7 +66,7 @@ pub fn bigram_stats(
                 2 => {
                     stats.fsb += 1;
                     if get_bad_bigrams {
-                        bigram_weight += 90;
+                        bigram_weight += 75;
                     }
                     if command == "fsb" {
                         insert_bigram = true;
