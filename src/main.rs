@@ -4,7 +4,9 @@ use std::{
     io::Write,
 };
 
-use chogalyzer::{generation, load_layout, load_magic_rules, output, stats, Algorithm, Args};
+use chogalyzer::{
+    generation, load_layout, load_magic_rules, output, output::Display, stats, Algorithm, Args,
+};
 use clap::Parser;
 
 fn main() {
@@ -17,12 +19,13 @@ fn main() {
     ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
 
     match args.command.as_str() {
-        "analyze" => output::print_stats(
-            &stats,
-            layout_raw,
-            &magic_rules,
+        "analyze" => Display::new(
             &args.layout.clone().strip_suffix(".txt").unwrap(),
-        ),
+            layout_raw,
+            &stats,
+            &magic_rules,
+        )
+        .full(),
         "generate" => {
             let layout = generation::generate_threads(
                 layout_raw,
@@ -32,12 +35,14 @@ fn main() {
                 args.cooling,
                 chogalyzer::Algorithm::SimAnnealing,
             );
-            output::print_stats(
-                &stats::analyze(corpus.clone(), layout.layout, &args.command, &layout.magic),
-                layout.layout,
-                &layout.magic,
+            Display::new(
+                // name
                 layout.layout[10..15].iter().collect::<String>().as_str(),
-            );
+                layout.layout,
+                &stats::analyze(corpus.clone(), layout.layout, &args.command, &layout.magic),
+                &layout.magic,
+            )
+            .full();
         }
         "get_data" => {
             let algorithms = [
@@ -77,12 +82,7 @@ fn main() {
             output::print_ngrams(&ngram_vec, stats.chars, "Inthreeroll".to_string(), &args);
         }
         "outthreeroll" => {
-            output::print_ngrams(
-                &ngram_vec,
-                stats.chars,
-                "Outthreeroll".to_string(),
-                &args,
-            );
+            output::print_ngrams(&ngram_vec, stats.chars, "Outthreeroll".to_string(), &args);
         }
         "red" => output::print_ngrams(&ngram_vec, stats.chars, "Red".to_string(), &args),
         "weak" => output::print_ngrams(&ngram_vec, stats.chars, "Weak".to_string(), &args),
@@ -91,9 +91,7 @@ fn main() {
         "skipgrams" => {
             output::print_ngrams(&ngram_vec, stats.skipgrams, "Skipgrams".to_string(), &args)
         }
-        "trigrams" => {
-            output::print_ngrams(&ngram_vec, stats.chars, "Trigrams".to_string(), &args)
-        }
+        "trigrams" => output::print_ngrams(&ngram_vec, stats.chars, "Trigrams".to_string(), &args),
         _ => println!("invalid command"),
     }
 }
