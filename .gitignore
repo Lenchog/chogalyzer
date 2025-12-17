@@ -2,3 +2,4 @@
 /layouts/
 /corpora/
 data.txt
+.direnv/
