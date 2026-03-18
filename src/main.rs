@@ -10,6 +10,8 @@ use chogalyzer::{
 use clap::Parser;
 
 fn main() {
+    let rules = load_magic_rules("whirl.txt");
+    dbg!(rules);
     let args = Args::parse();
     let corpus = load_corpus(&args.corpus, &args.layout);
     let layout_raw = load_layout(&args.layout);

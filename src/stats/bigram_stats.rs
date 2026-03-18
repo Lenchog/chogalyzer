@@ -17,6 +17,7 @@ pub fn bigram_stats(
 
     if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
         if key1.finger == key2.finger {
+            // are the keys the same?
             let sfr = key1 == key2;
             if sfr {
                 stats.sfr += 1;
@@ -189,7 +190,8 @@ pub fn scissor(key1: &Key, key2: &Key) -> u8 {
             && (key2.finger == Finger::Middle || key2.finger == Finger::Ring))
             || ((key2.finger == Finger::Pinky || key2.finger == Finger::Index)
                 && (key1.finger == Finger::Middle || key1.finger == Finger::Ring))
-            || (key1.finger == Finger::Middle && key2.finger == Finger::Ring) || (key2.finger == Finger::Middle && key1.finger == Finger::Ring))
+            || (key1.finger == Finger::Middle && key2.finger == Finger::Ring)
+            || (key2.finger == Finger::Middle && key1.finger == Finger::Ring))
     {
         return distance;
     }
