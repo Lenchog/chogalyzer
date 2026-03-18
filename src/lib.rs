@@ -110,7 +110,7 @@ pub struct Stats {
 const INCLUDE_THUMB_ALT: bool = true;
 const INCLUDE_THUMB_ROLL: bool = true;
 
-pub fn load_magic_rules(layout: &String) -> AHashMap<char, char> {
+pub fn load_magic_rules(layout: &str) -> AHashMap<char, char> {
     let layout_letters = load_layout_letters(layout);
     let magic_rules_raw = layout_letters[36..].split('\n').filter(|s| !s.is_empty());
     let mut magic_rules: AHashMap<char, char> = AHashMap::default();
@@ -124,7 +124,7 @@ pub fn load_magic_rules(layout: &String) -> AHashMap<char, char> {
     magic_rules
 }
 
-pub fn load_layout(layout: &String) -> [char; 32] {
+pub fn load_layout(layout: &str) -> [char; 32] {
     let layout_letters = load_layout_letters(layout);
     // has to be 37 because ⎵ is a few extra bytes
     layout_letters[..35]
@@ -135,8 +135,8 @@ pub fn load_layout(layout: &String) -> [char; 32] {
         .expect("couldn't read layout")
 }
 
-fn load_layout_letters(layout: &String) -> String {
-    let layout_letters: String = fs::read_to_string("layouts/".to_owned() + &layout)
+fn load_layout_letters(layout: &str) -> String {
+    let layout_letters: String = fs::read_to_string("layouts/".to_owned() + layout)
         .expect("couldn't read layout")
         .replace([' ', ' '], "")
         .chars()

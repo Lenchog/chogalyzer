@@ -34,7 +34,7 @@ pub fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     } else if key2.hand == key3.hand {
         roll(key2, key3)
     } else {
-        return Trigram::Other;
+        Trigram::Other
     }
 }
 

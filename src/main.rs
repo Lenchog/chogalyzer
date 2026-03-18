@@ -16,11 +16,11 @@ fn main() {
     let magic_rules = load_magic_rules(&args.layout);
     let stats = stats::analyze(corpus.clone(), layout_raw, &args.command, &magic_rules);
     let mut ngram_vec: Vec<([char; 3], u32)> = stats.ngram_table.clone().into_iter().collect();
-    ngram_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    ngram_vec.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     match args.command.as_str() {
         "analyze" => Display::new(
-            &args.layout.clone().strip_suffix(".txt").unwrap(),
+            args.layout.clone().strip_suffix(".txt").unwrap(),
             layout_raw,
             &stats,
             &magic_rules,
@@ -96,7 +96,7 @@ fn main() {
     }
 }
 
-fn filter_corpus(corpus_name: &String, layout_raw: &[char; 32]) -> String {
+fn filter_corpus(corpus_name: &str, layout_raw: &[char; 32]) -> String {
     println!("{}", "corpora/raw/".to_owned() + corpus_name);
     let corpus: String = fs::read_to_string("corpora/raw/".to_owned() + corpus_name)
         .expect("error reading corpus")
@@ -117,11 +117,11 @@ fn filter_corpus(corpus_name: &String, layout_raw: &[char; 32]) -> String {
         .collect();
     let mut write_file =
         File::create("corpora/filtered/".to_owned() + corpus_name).expect("couldn't write corpus");
-    let _ = write_file.write_all(&corpus.as_bytes());
+    let _ = write_file.write_all(corpus.as_bytes());
     corpus.to_string()
 }
 
-fn load_corpus(corpus_name: &String, layout_name: &String) -> String {
+fn load_corpus(corpus_name: &str, layout_name: &str) -> String {
     let layout = load_layout(layout_name);
     match fs::read_to_string("corpora/filtered/".to_owned() + corpus_name) {
         Ok(corpus) => corpus,
@@ -132,12 +132,12 @@ fn load_corpus(corpus_name: &String, layout_name: &String) -> String {
     }
 }
 
-fn convert(new_layout_name: &String, corpus_name: &String) {
+fn convert(new_layout_name: &str, corpus_name: &str) {
     let old_layout_name: &String = &String::from("whirl.txt");
-    let old_layout = load_layout(&old_layout_name);
-    let new_layout = load_layout(&new_layout_name);
-    let old_magic_rules = load_magic_rules(&old_layout_name);
-    let new_magic_rules = load_magic_rules(&new_layout_name);
+    let old_layout = load_layout(old_layout_name);
+    let new_layout = load_layout(new_layout_name);
+    let old_magic_rules = load_magic_rules(old_layout_name);
+    let new_magic_rules = load_magic_rules(new_layout_name);
     let mut corpus = load_corpus(corpus_name, old_layout_name);
 
     for letter in new_layout {

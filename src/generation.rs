@@ -7,8 +7,7 @@ use indicatif::MultiProgress;
 use indicatif::ProgressBar;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use std::{fs::OpenOptions, thread, time::Instant};
-use std::{io::Write, usize};
+use std::{fs::OpenOptions, io::Write, thread, time::Instant};
 const THREADS: usize = 12;
 
 #[must_use]
@@ -97,7 +96,7 @@ fn generate(
                 .open("data.txt")
                 .expect("cannot open file");
             data_file
-                .write(
+                .write_all(
                     format!(
                         "{} {} {} {}\n",
                         algorithm,
@@ -127,7 +126,7 @@ fn generate(
 }
 
 fn randomise_layout(layout_raw: [char; 32], corpus: String, magic_rule_number: usize) -> Layout {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     let mut new_layout_raw = layout_raw;
     new_layout_raw.shuffle(&mut rng);
     let magic_rules = get_magic_rules(&corpus, new_layout_raw, magic_rule_number);
@@ -177,30 +176,30 @@ fn find_best_swap(
 
 fn get_temperature(layout: &mut Layout, corpus: &String) -> f64 {
     let mut score_array: [f64; 10] = Default::default();
-    for i in 0..score_array.len() {
-        let mut rng = rand::thread_rng();
-        let letter1 = rng.gen_range(0..layout.layout.len());
-        let letter2 = rng.gen_range(0..layout.layout.len());
+    for score in &mut score_array {
+        let mut rng = rand::rng();
+        let letter1 = rng.random_range(0..layout.layout.len());
+        let letter2 = rng.random_range(0..layout.layout.len());
         layout.layout.swap(letter1, letter2);
         layout.stats = stats::analyze(corpus.to_string(), layout.layout, "generate", &layout.magic);
-        score_array[i] = layout.stats.score;
+        *score = layout.stats.score;
     }
     standard_deviation(&score_array.clone())
 }
 
 pub fn attempt_swap(old_layout: Layout, corpus: &String, magic_rules: usize) -> Layout {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut new_layout = old_layout;
     // swap letters or column
-    if rng.gen_range(0..10) > 3 {
+    if rng.random_range(0..10) > 3 {
         new_layout
             .layout
-            .swap(rng.gen_range(0..32), rng.gen_range(0..32));
+            .swap(rng.random_range(0..32), rng.random_range(0..32));
     } else {
         new_layout.layout = column_swap(
             new_layout.layout,
-            rng.gen_range(1..10),
-            rng.gen_range(1..10),
+            rng.random_range(1..10),
+            rng.random_range(1..10),
         );
     }
 
@@ -249,7 +248,7 @@ fn annealing_func(old: f64, new: f64, temperature: f64) -> bool {
     let mut rng = ThreadRng::default();
     let delta: f64 = new - old;
     let probability = 1.0 / (1.0 + (delta / temperature).exp());
-    rng.gen_range(0.0..1.0) > probability
+    rng.random_range(0.0..1.0) > probability
 }
 
 fn column_swap(mut layout: [char; 32], col1: usize, col2: usize) -> [char; 32] {
@@ -297,7 +296,7 @@ pub fn get_magic_rules(
     let mut sorted_vec: Vec<([char; 2], u32)> = stats.bad_bigrams.into_iter().collect();
 
     // Sort in descending order based on frequency
-    sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
+    sorted_vec.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     let mut used_first_letters: AHashSet<char> = AHashSet::new();
     let mut sorted_keys: AHashMap<char, char> = AHashMap::default();

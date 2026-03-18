@@ -55,7 +55,7 @@ impl Display<'_> {
             magic_rules: format_magic(magic_rules),
         }
     }
-    pub fn simple_display(display: Self) {}
+    pub fn simple_display(_display: Self) {}
 
     pub fn full(self) {
         let mut layout_builder = Builder::default();
