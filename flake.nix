@@ -126,7 +126,7 @@
           inherit checks packages;
           treefmt = {
             programs = {
-              nixfmt-rfc-style.enable = true;
+              nixfmt.enable = true;
               statix.enable = true;
             };
             flakeFormatter = true;
@@ -142,12 +142,12 @@
                 statix
                 # rust
                 gcc # required for clap
-								rust-analyzer
-								lldb
+                rust-analyzer
+                lldb
                 toolchain
-								(pkgs.python3.withPackages (python-pkgs: [
-									python-pkgs.matplotlib
-								]))
+                (pkgs.python3.withPackages (python-pkgs: [
+                  python-pkgs.matplotlib
+                ]))
               ]
               ++ build-deps;
           };

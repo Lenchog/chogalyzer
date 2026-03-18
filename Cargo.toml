@@ -6,10 +6,10 @@ edition = "2021"
 [dependencies]
 ahash = "0.8.11"
 clap = { version = "4.5.26", features = ["derive"] }
-indicatif = "0.17.9"
-rand = "0.8.5"
-shuffle = "0.1.7"
-tabled = "0.17.0"
+indicatif = "0.18"
+rand = "0.10"
+shuffle = "0.2"
+tabled = "0.20"
 
 [profile.release]
 codegen-units = 1
@@ -18,7 +18,7 @@ debug = 1
 panic = "abort"
 
 [dev-dependencies]
-diol = {version = "0.8.0", default-features = false}
+diol = {version = "0.13", default-features = false}
 
 [[bench]]
 name = "my_benchmark"
