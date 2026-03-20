@@ -1,7 +1,7 @@
 use chogalyzer::{
     convert_corpus, generation, load_corpus, load_layout, load_magic_rules,
     output::{self, Display},
-    stats, Algorithm, Args,
+    stats, Args,
 };
 use clap::Parser;
 
@@ -15,6 +15,7 @@ fn main() {
     ngram_vec.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     match args.command.as_str() {
+        // Basic command, analyses a layout and displays
         "analyze" => Display::new(
             args.layout.clone().strip_suffix(".txt").unwrap(),
             layout_raw,
@@ -22,6 +23,7 @@ fn main() {
             &magic_rules,
         )
         .full(),
+        // Generates a layout using sim annealing and displays. Algorithm should be an arg... TODO
         "generate" => {
             let layout = generation::generate_threads(
                 layout_raw,
@@ -40,29 +42,10 @@ fn main() {
             )
             .full();
         }
-        "get_data" => {
-            let algorithms = [
-                Algorithm::GreedySwapping,
-                Algorithm::SimAnnealing,
-                Algorithm::HillClimbing,
-                Algorithm::Hybrid,
-                Algorithm::RandomLayout,
-            ];
-            for _ in 0..4 {
-                for algorithm in &algorithms {
-                    let _ = generation::generate_threads(
-                        layout_raw,
-                        &corpus,
-                        args.iterations,
-                        args.magic_rules,
-                        args.cooling,
-                        algorithm.clone(),
-                    );
-                }
-            }
-            println!("done");
-        }
+        // Standalone function that converts functions from Whirl to something else so I can try it out
         "convert" => convert_corpus(&args.layout, &args.corpus),
+
+        // all of these get a list of the most common examples of each ngram
         "sfb" => output::print_ngrams(&ngram_vec, stats.chars, "SFB".to_string(), &args),
         "sfr" => output::print_ngrams(&ngram_vec, stats.chars, "SFR".to_string(), &args),
         "sfs" => output::print_ngrams(&ngram_vec, stats.skipgrams, "SFS".to_string(), &args),
