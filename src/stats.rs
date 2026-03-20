@@ -4,6 +4,7 @@ pub mod trigram_stats;
 use crate::{Finger, Key, Stats, INCLUDE_THUMB_ALT, INCLUDE_THUMB_ROLL};
 use ahash::AHashMap;
 
+/// Most important function. Analyses the layout including all stats. Also pretty ugly. Bad performance, and very long
 #[must_use]
 pub fn analyze(
     mut corpus: String,
@@ -106,13 +107,17 @@ pub fn analyze(
         if char_freq.contains_key(&layout_letters[i]) {
             stats.heatmap += i64::from(weighting[i] * char_freq[&layout_letters[i]]);
             let key = &layout[&layout_letters[i]];
-            *columns.entry((key.finger.clone(), key.hand)).or_insert(0) += char_freq[&layout_letters[i]];
+            *columns.entry((key.finger.clone(), key.hand)).or_insert(0) +=
+                char_freq[&layout_letters[i]];
         }
     }
     for (column, freq) in columns {
-        let penalty = f32::max(freq as f32 - max_freq[&column.0] as f32 / 100.0 * stats.chars as f32, 0.0) as i64;
+        let penalty = f32::max(
+            freq as f32 - max_freq[&column.0] as f32 / 100.0 * stats.chars as f32,
+            0.0,
+        ) as i64;
         stats.column_pen += penalty;
-    };
+    }
     let weights = Stats {
         score: 0.0,
         heatmap: -500,
@@ -145,6 +150,7 @@ pub fn analyze(
     stats
 }
 
+/// Combines all stats into one score with the weighting
 #[must_use]
 pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     let mut score = 0;
@@ -165,6 +171,7 @@ pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     score as f64
 }
 
+/// Converts a layout from its raw character form into a Hashmap of keys
 pub fn layout_raw_to_table(layout_raw: &[char; 32]) -> AHashMap<char, Key> {
     #[rustfmt::skip]
     return AHashMap::from([
