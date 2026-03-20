@@ -3,6 +3,7 @@ use crate::Stats;
 use ahash::AHashMap;
 use tabled::{builder::Builder, col, settings::Style};
 
+/// When the user wants a list of the most frequent of a type of ngram, displays them in a table
 pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String, args: &Args) {
     #![allow(clippy::cast_precision_loss)]
     let min_range = 0;
@@ -35,28 +36,35 @@ pub fn print_ngrams(vec: &[([char; 3], u32)], ngrams: u32, title: String, args: 
     }
 }
 
-pub struct Display<'a> {
+/// What's needed to display a layout
+pub struct LayoutDisplay<'a> {
     name: &'a str,
     layout: [String; 4],
     stats: AHashMap<&'a str, f32>,
     magic_rules: Vec<String>,
 }
-impl Display<'_> {
+impl LayoutDisplay<'_> {
+    /// Get the data needed for display
     pub fn new<'a>(
         name: &'a str,
         layout: [char; 32],
         stats: &'a Stats,
         magic_rules: &'a AHashMap<char, char>,
-    ) -> Display<'a> {
-        Display {
+    ) -> LayoutDisplay<'a> {
+        LayoutDisplay {
             name,
             layout: format_layout(layout),
             stats: get_stats_hash(stats),
             magic_rules: format_magic(magic_rules),
         }
     }
-    pub fn simple_display(_display: Self) {}
+    /// Displays data in a more simple way.
+    // TODO
+    pub fn simple_display(_display: Self) {
+        todo!()
+    }
 
+    /// Display a lot of information about a layout in a pretty table
     pub fn full(self) {
         let mut layout_builder = Builder::default();
         layout_builder.push_record(["Layout"]);
@@ -141,6 +149,7 @@ impl Display<'_> {
     }
 }
 
+/// Format a layout for display
 fn format_layout(layout: [char; 32]) -> [String; 4] {
     [
         layout[0..10].iter().collect(),
@@ -150,6 +159,7 @@ fn format_layout(layout: [char; 32]) -> [String; 4] {
     ]
 }
 
+/// Format magic rules for display
 fn format_magic(magic_rules: &AHashMap<char, char>) -> Vec<String> {
     magic_rules
         .iter()
@@ -157,6 +167,7 @@ fn format_magic(magic_rules: &AHashMap<char, char>) -> Vec<String> {
         .collect()
 }
 
+/// Get a table for display from the ngram HashMap
 fn table_from_hashmap(stats: Vec<&str>, hash: AHashMap<&str, f32>) -> tabled::Table {
     let mut builder = Builder::default();
 
@@ -168,6 +179,7 @@ fn table_from_hashmap(stats: Vec<&str>, hash: AHashMap<&str, f32>) -> tabled::Ta
     table
 }
 
+/// Turn the stats into a hashmap for display. I don't know why this is needed tbh
 fn get_stats_hash(stats: &Stats) -> AHashMap<&str, f32> {
     #![allow(clippy::cast_precision_loss)]
     AHashMap::from([

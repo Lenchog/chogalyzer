@@ -1,6 +1,6 @@
 use chogalyzer::{
     convert_corpus, generation, load_corpus, load_layout, load_magic_rules,
-    output::{self, Display},
+    output::{self, LayoutDisplay},
     stats, Args,
 };
 use clap::Parser;
@@ -16,7 +16,7 @@ fn main() {
 
     match args.command.as_str() {
         // Basic command, analyses a layout and displays
-        "analyze" => Display::new(
+        "analyze" => LayoutDisplay::new(
             args.layout.clone().strip_suffix(".txt").unwrap(),
             layout_raw,
             &stats,
@@ -33,7 +33,7 @@ fn main() {
                 args.cooling,
                 chogalyzer::Algorithm::SimAnnealing,
             );
-            Display::new(
+            LayoutDisplay::new(
                 // name
                 layout.layout[10..15].iter().collect::<String>().as_str(),
                 layout.layout,
