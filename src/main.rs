@@ -1,17 +1,11 @@
-use ahash::HashMap;
-use std::{
-    fs::{self, File},
-    io::Write,
-};
-
 use chogalyzer::{
-    generation, load_layout, load_magic_rules, output, output::Display, stats, Algorithm, Args,
+    convert_corpus, generation, load_corpus, load_layout, load_magic_rules,
+    output::{self, Display},
+    stats, Algorithm, Args,
 };
 use clap::Parser;
 
 fn main() {
-    let rules = load_magic_rules("whirl.txt");
-    dbg!(rules);
     let args = Args::parse();
     let corpus = load_corpus(&args.corpus, &args.layout);
     let layout_raw = load_layout(&args.layout);
@@ -68,7 +62,7 @@ fn main() {
             }
             println!("done");
         }
-        "convert" => convert(&args.layout, &args.corpus),
+        "convert" => convert_corpus(&args.layout, &args.corpus),
         "sfb" => output::print_ngrams(&ngram_vec, stats.chars, "SFB".to_string(), &args),
         "sfr" => output::print_ngrams(&ngram_vec, stats.chars, "SFR".to_string(), &args),
         "sfs" => output::print_ngrams(&ngram_vec, stats.skipgrams, "SFS".to_string(), &args),
@@ -96,75 +90,4 @@ fn main() {
         "trigrams" => output::print_ngrams(&ngram_vec, stats.chars, "Trigrams".to_string(), &args),
         _ => println!("invalid command"),
     }
-}
-
-fn filter_corpus(corpus_name: &str, layout_raw: &[char; 32]) -> String {
-    println!("{}", "corpora/raw/".to_owned() + corpus_name);
-    let corpus: String = fs::read_to_string("corpora/raw/".to_owned() + corpus_name)
-        .expect("error reading corpus")
-        .replace("\n\n", "")
-        .replace(' ', "_")
-        .chars()
-        .flat_map(|ch| {
-            if ch.is_ascii_uppercase() {
-                // Replace uppercase letters with "*" followed by lowercase
-                format!("*{}", ch.to_ascii_lowercase())
-                    .chars()
-                    .collect::<Vec<_>>()
-            } else {
-                vec![ch]
-            }
-        })
-        .filter(|ch| layout_raw.contains(ch))
-        .collect();
-    let mut write_file =
-        File::create("corpora/filtered/".to_owned() + corpus_name).expect("couldn't write corpus");
-    let _ = write_file.write_all(corpus.as_bytes());
-    corpus.to_string()
-}
-
-fn load_corpus(corpus_name: &str, layout_name: &str) -> String {
-    let layout = load_layout(layout_name);
-    match fs::read_to_string("corpora/filtered/".to_owned() + corpus_name) {
-        Ok(corpus) => corpus,
-        Err(_) => {
-            println!("couldn't find corpus, now loading");
-            filter_corpus(corpus_name, &layout)
-        }
-    }
-}
-
-fn convert(new_layout_name: &str, corpus_name: &str) {
-    let old_layout_name: &String = &String::from("whirl.txt");
-    let old_layout = load_layout(old_layout_name);
-    let new_layout = load_layout(new_layout_name);
-    let old_magic_rules = load_magic_rules(old_layout_name);
-    let new_magic_rules = load_magic_rules(new_layout_name);
-    let mut corpus = load_corpus(corpus_name, old_layout_name);
-
-    for letter in new_layout {
-        let rule: [char; 2] = match new_magic_rules.get(&letter) {
-            Some(other_letter) => [letter, *other_letter],
-            None => [letter, letter],
-        };
-        corpus = corpus.replace(&rule.iter().collect::<String>(), &format!("{letter}*"));
-    }
-
-    let hash = new_layout.iter().zip(old_layout).collect::<HashMap<_, _>>();
-
-    let mut new_corpus: String = corpus
-        .chars()
-        .map(|c| hash.get(&c).copied().unwrap_or(c))
-        .collect();
-
-    for letter in old_layout {
-        let rule: [char; 2] = match old_magic_rules.get(&letter) {
-            Some(other_letter) => [letter, *other_letter],
-            None => [letter, letter],
-        };
-        new_corpus = new_corpus.replace(&format!("{letter}*"), &rule.iter().collect::<String>());
-    }
-    new_corpus = new_corpus.replace("_", " ");
-
-    println!("{new_corpus}");
 }
