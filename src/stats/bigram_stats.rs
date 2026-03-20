@@ -4,6 +4,7 @@ use crate::Finger;
 use crate::Key;
 use crate::Stats;
 
+/// Get bigram stats
 pub fn bigram_stats(
     key1: &Key,
     key2: &Key,
@@ -80,6 +81,8 @@ pub fn bigram_stats(
     (insert_bigram, bigram_weight.try_into().unwrap())
 }
 
+/// Get skipgram stats
+// Eww repeated code TODO
 pub fn skipgram_stats(
     key1: &Key,
     key2: &Key,
@@ -161,13 +164,13 @@ pub fn skipgram_stats(
 
     insert_ngram
 }
+
+/// Check if bigram is on the same finger, and not a repeat
 pub fn sf(key1: &Key, key2: &Key) -> bool {
-    if key1.finger == key2.finger && key1.hand == key2.hand && key1 != key2 {
-        return true;
-    }
-    false
+    key1.finger == key2.finger && key1.hand == key2.hand && key1 != key2
 }
 
+/// Check whether bigram is a lateral stretch
 pub fn ls(key1: &Key, key2: &Key) -> bool {
     if (key1.lateral || key2.lateral)
         && key1.hand == key2.hand
@@ -179,6 +182,9 @@ pub fn ls(key1: &Key, key2: &Key) -> bool {
     false
 }
 
+/// Check the intensity of a scissor.
+/// 0 => not a scissor, 1 => Half Scissor, 2 => Full Scissor
+// TODO maybe turn that into an enum
 pub fn scissor(key1: &Key, key2: &Key) -> u8 {
     let distance: u8 = (i64::from(key1.row) - i64::from(key2.row))
         .abs()
