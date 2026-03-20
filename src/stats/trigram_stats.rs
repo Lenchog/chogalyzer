@@ -4,6 +4,7 @@ use crate::Stats;
 use crate::INCLUDE_THUMB_ALT;
 use crate::INCLUDE_THUMB_ROLL;
 
+/// Every state a trigram can be
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum Trigram {
     Inroll,
@@ -16,6 +17,7 @@ pub enum Trigram {
     Other,
 }
 
+/// Categorises trigram
 pub fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     if key2.hand != key1.hand
         && key2.hand != key3.hand
@@ -38,6 +40,7 @@ pub fn trigram_stat(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     }
 }
 
+/// Checks which kind of roll two keys are
 fn roll(key1: &Key, key2: &Key) -> Trigram {
     if !INCLUDE_THUMB_ROLL && (key1.finger == Finger::Thumb || key2.finger == Finger::Thumb) {
         return Trigram::Other;
@@ -48,6 +51,7 @@ fn roll(key1: &Key, key2: &Key) -> Trigram {
     Trigram::Outroll
 }
 
+/// Categorises trigrams on one hand
 fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     if !INCLUDE_THUMB_ROLL
         && (key1.finger == Finger::Thumb
@@ -74,6 +78,7 @@ fn onehand(key1: &Key, key2: &Key, key3: &Key) -> Trigram {
     Trigram::Red
 }
 
+/// Gets stats from the trigram
 pub fn trigram_stats(
     key1: &Key,
     key2: &Key,
