@@ -1,8 +1,8 @@
 use ahash::AHashMap;
 use chogalyzer::generation::get_magic_rules;
+use chogalyzer::stats::analyze;
 use chogalyzer::stats::bigram_stats::{bigram_stats, scissor, skipgram_stats};
 use chogalyzer::stats::trigram_stats::trigram_stat;
-use chogalyzer::stats::{analyze, layout_raw_to_table};
 use chogalyzer::*;
 use chogalyzer::{load_layout, load_magic_rules};
 use diol::prelude::*;
@@ -22,15 +22,15 @@ fn main() -> std::io::Result<()> {
 }
 
 fn bench_analyse(bencher: Bencher, command: &str) {
-    let magic_rules = load_magic_rules();
+    let magic_rules = load_magic_rules("whirl.txt");
     let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
-    let layout_raw = load_layout();
+    let layout_raw = load_layout("whirl.txt");
     bencher.bench(|| analyze(corpus.clone(), layout_raw, command, &magic_rules));
 }
 
 fn bench_get_magic_rules(bencher: Bencher, magic_rules: usize) {
     let corpus: String = fs::read_to_string("corpora/filtered/mr.txt").expect("corpus not loaded");
-    let layout_raw = load_layout();
+    let layout_raw = load_layout("whirl.txt");
     bencher.bench(|| get_magic_rules(&corpus, layout_raw, magic_rules));
 }
 
@@ -73,23 +73,6 @@ fn bench_trigram_stats(bencher: Bencher, letters: &str) {
     bencher.bench(|| {
         trigram_stat(&key1, &key2, &key3);
     })
-}
-
-fn load_three_keys(letters: &str) -> (Key, Key, Key) {
-    let layout_raw = &load_layout();
-    let table = layout_raw_to_table(layout_raw);
-    let key1 = table[&letters.chars().next().unwrap()].clone();
-    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
-    let key3 = table[&letters.chars().nth(2).unwrap()].clone();
-    (key1, key2, key3)
-}
-
-fn load_two_keys(letters: &str) -> (Key, Key) {
-    let layout_raw = &load_layout();
-    let table = layout_raw_to_table(layout_raw);
-    let key1 = table[&letters.chars().next().unwrap()].clone();
-    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
-    (key1, key2)
 }
 
 fn load_finger_weights() -> AHashMap<Finger, i64> {

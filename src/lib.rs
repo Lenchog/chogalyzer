@@ -9,6 +9,8 @@ use std::{
     io::Write,
 };
 
+use crate::stats::layout_raw_to_table;
+
 /// Contains all information about a key's position
 #[derive(PartialEq, Debug, Clone)]
 pub struct Key {
@@ -208,6 +210,23 @@ fn load_layout_letters(layout: &str) -> String {
         .chars()
         .collect();
     layout_letters
+}
+
+pub fn load_three_keys(letters: &str) -> (Key, Key, Key) {
+    let layout_raw = &load_layout("whirl.txt");
+    let table = layout_raw_to_table(layout_raw);
+    let key1 = table[&letters.chars().next().unwrap()].clone();
+    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
+    let key3 = table[&letters.chars().nth(2).unwrap()].clone();
+    (key1, key2, key3)
+}
+
+pub fn load_two_keys(letters: &str) -> (Key, Key) {
+    let layout_raw = &load_layout("whirl.txt");
+    let table = layout_raw_to_table(layout_raw);
+    let key1 = table[&letters.chars().next().unwrap()].clone();
+    let key2 = table[&letters.chars().nth(1).unwrap()].clone();
+    (key1, key2)
 }
 
 /// Filter corpus with only letters from the layout and processes magic rules

@@ -46,7 +46,7 @@ pub fn bigram_stats(
                 insert_bigram = true;
             }
         } else {
-            if key1.lateral || key2.lateral {
+            if ls(key1, key2) {
                 stats.lsb += 1;
                 if get_bad_bigrams {
                     bigram_weight += 15;

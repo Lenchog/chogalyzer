@@ -139,3 +139,62 @@ pub fn trigram_stats(
     }
     (stats, insert_ngram)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        load_three_keys,
+        stats::trigram_stats::{trigram_stat, Trigram},
+    };
+
+    #[test]
+    fn test_inrolls() {
+        let strings = Vec::from(["the", "ern", "erm", "ult", "er_", "*th"]);
+        test_trigram(strings, Trigram::Inroll);
+    }
+
+    #[test]
+    fn test_outrolls() {
+        let strings = Vec::from(["sno", "hey", "_to", "sni"]);
+        test_trigram(strings, Trigram::Outroll);
+    }
+
+    #[test]
+    fn test_alt() {
+        let strings = Vec::from(["_a_", "he_", "lnl", "nln", "_*_", "*_*"]);
+        test_trigram(strings, Trigram::Alt);
+    }
+
+    #[test]
+    fn test_redirect() {
+        let strings = Vec::from(["ere", "are", "ght", "_th", "*ia"]);
+        test_trigram(strings, Trigram::Red);
+    }
+
+    #[test]
+    fn test_weak_red() {
+        let strings = Vec::from(["nds", "nts", "yea"]);
+        test_trigram(strings, Trigram::WeakRed);
+    }
+
+    #[test]
+    fn test_in_three_roll() {
+        let strings = Vec::from(["nd_", "you", "ng_"]);
+        test_trigram(strings, Trigram::InThreeRoll);
+    }
+
+    #[test]
+    fn test_out_three_roll() {
+        let strings = Vec::from(["rea", "_kn", "*le"]);
+        test_trigram(strings, Trigram::OutThreeRoll);
+    }
+
+    fn test_trigram(strings: Vec<&str>, expected_stat: Trigram) {
+        for string in strings {
+            let (key1, key2, key3) = load_three_keys(string);
+            let stat = trigram_stat(&key1, &key2, &key3);
+            dbg!(&stat);
+            assert_eq!(stat, expected_stat);
+        }
+    }
+}
