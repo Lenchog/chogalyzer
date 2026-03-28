@@ -24,12 +24,15 @@ pub fn analyze(
         (Finger::Thumb, 50),
     ]);
 
-    for letter in layout_letters {
-        let rule: [char; 2] = match magic_rules.get(&letter) {
-            Some(other_letter) => [letter, *other_letter],
-            None => [letter, letter],
-        };
-        corpus = corpus.replace(&rule.iter().collect::<String>(), &format!("{letter}*"));
+    if layout_letters.contains(&'*') {
+        println!("magic");
+        for letter in layout_letters {
+            let rule: [char; 2] = match magic_rules.get(&letter) {
+                Some(other_letter) => [letter, *other_letter],
+                None => [letter, letter],
+            };
+            corpus = corpus.replace(&rule.iter().collect::<String>(), &format!("{letter}*"));
+        }
     }
 
     for letter_u8 in corpus.as_bytes() {
@@ -120,10 +123,10 @@ pub fn analyze(
     }
     let weights = Stats {
         score: 0.0,
-        heatmap: -500,
+        heatmap: -5,
         //heatmap: 0,
         column_pen: -10000,
-        fspeed: -200,
+        fspeed: -30,
         sfb: 0,
         sfr: 0,
         sfs: 0,
@@ -154,8 +157,8 @@ pub fn analyze(
 #[must_use]
 pub fn score(stats: &Stats, weighting: &Stats) -> f64 {
     let mut score = 0;
-    score += stats.fspeed * weighting.fspeed / 7;
-    score += stats.heatmap * weighting.heatmap / 100;
+    score += stats.fspeed * weighting.fspeed;
+    score += stats.heatmap * weighting.heatmap;
     score += stats.column_pen * weighting.column_pen;
     score += stats.lsb * weighting.lsb;
     score += stats.lss * weighting.lss;
