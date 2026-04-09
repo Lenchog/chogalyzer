@@ -4,81 +4,115 @@ use crate::Finger;
 use crate::Key;
 use crate::Stats;
 
-/// Get bigram stats
+/// Every state a bigram can be
+#[derive(Debug, Eq, Hash, PartialEq)]
+pub enum Bigram {
+    None,
+    SFB,
+    SFR,
+    FSB,
+    HSB,
+    LSB,
+    FSLSB,
+    HSLSB,
+}
+
 pub fn bigram_stats(
     key1: &Key,
     key2: &Key,
     command: &str,
     stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
-    get_bad_bigrams: bool,
-) -> (bool, u32) {
-    let mut insert_bigram = false;
-    let mut bigram_weight = 0;
+) -> (bool, i64) {
+    let stat = bigram_stat(key1, key2);
+    // If the command is the stat, we return "true" for inserting the bigram.
+    // We also return a weight
+    return match stat {
+        Bigram::SFB => {
+            stats.sfb += 1;
+            let distance_y = key1.row.abs_diff(key2.row);
+            // If they're either both lateral or both not lateral,
+            // we don't need to do pythag for distance
+            let distance: u8 = if key1.lateral == key2.lateral {
+                distance_y
+            // Otherwise, we do need to do pythag
+            } else {
+                (distance_y.pow(2) + 1).isqrt()
+            };
+            let penalty = 5 * finger_weights[&key1.finger] * distance as i64;
+            stats.fspeed += penalty;
+            (command == "sfb", 5 * penalty)
+        }
+        Bigram::SFR => {
+            stats.sfr += 1;
+            let penalty = 2 * finger_weights[&key1.finger];
+            stats.fspeed += penalty;
+            (command == "sfr", penalty)
+        }
+        Bigram::FSB => {
+            stats.fsb += 1;
+            (command == "fsb", 75)
+        }
+        Bigram::HSB => {
+            stats.hsb += 1;
+            (command == "hsb", 15)
+        }
+        Bigram::LSB => {
+            stats.lsb += 1;
+            (command == "lsb", 15)
+        }
+        Bigram::FSLSB => {
+            stats.fsb += 1;
+            stats.lsb += 1;
+            (command == "lsb" || command == "fsb", 90)
+        }
+        Bigram::HSLSB => {
+            stats.hsb += 1;
+            stats.lsb += 1;
+            (command == "lsb" || command == "hsb", 30)
+        }
+        Bigram::None => (false, 0),
+    };
+}
 
+/// Get bigram stats
+pub fn bigram_stat(key1: &Key, key2: &Key) -> Bigram {
+    // If they're the same hand and neither is thumb.
     if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
+        // Either SFB or SFR
         if key1.finger == key2.finger {
             // are the keys the same?
             let sfr = key1 == key2;
             if sfr {
-                stats.sfr += 1;
+                return Bigram::SFR;
             } else {
-                stats.sfb += 1;
-            }
-            let weight = if sfr { 2 } else { 5 };
-
-            let dy = key1.row.abs_diff(key2.row);
-            let distance: u8 = if !sfr {
-                if key1.lateral == key2.lateral {
-                    dy.max(1)
-                } else {
-                    (dy.pow(2) + 1).isqrt()
-                }
-            } else {
-                1
-            };
-            let penalty = weight * finger_weights[&key1.finger] * distance as i64;
-            stats.fspeed += penalty;
-            if get_bad_bigrams {
-                bigram_weight += 5 * penalty;
-            }
-            if (!sfr && command == "sfb") || (sfr && command == "sfr") {
-                insert_bigram = true;
+                return Bigram::SFB;
             }
         } else {
-            if ls(key1, key2) {
-                stats.lsb += 1;
-                if get_bad_bigrams {
-                    bigram_weight += 15;
+            // We can't return immediately in case it's multiple stats
+            let lsb = ls(key1, key2);
+            let scissor = scissor(key1, key2);
+            return if scissor == 1 {
+                if lsb {
+                    Bigram::HSLSB
+                } else {
+                    Bigram::HSB
                 }
-                if command == "lsb" {
-                    insert_bigram = true;
+            } else if scissor == 2 {
+                if lsb {
+                    Bigram::FSLSB
+                } else {
+                    Bigram::FSB
                 }
-            }
-            match scissor(key1, key2) {
-                1 => {
-                    stats.hsb += 1;
-                    if get_bad_bigrams {
-                        bigram_weight += 15;
-                    }
-                    if command == "hsb" {
-                        insert_bigram = true;
-                    }
-                }
-                2 => {
-                    stats.fsb += 1;
-                    if get_bad_bigrams {
-                        bigram_weight += 75;
-                    }
-                    if command == "fsb" {
-                        insert_bigram = true;
-                    }
-                }
-                _ => {}
-            }
-        }
+            } else if lsb {
+                return Bigram::LSB;
+            } else {
+                return Bigram::None;
+            };
+        };
+    } else {
+        return Bigram::None;
     }
-    (insert_bigram, bigram_weight.try_into().unwrap())
 }
 
 /// Get skipgram stats

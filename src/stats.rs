@@ -51,7 +51,6 @@ pub fn analyze(
             command,
             &mut stats,
             &finger_weights,
-            false,
         );
         if bigram.0 {
             *stats

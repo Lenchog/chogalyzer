@@ -295,13 +295,12 @@ pub fn get_magic_rules(
             "get_bad_bigrams",
             &mut stats,
             &finger_weights,
-            true,
         );
         if bigram.1 > 0 {
             *stats
                 .bad_bigrams
                 .entry([previous_letter, letter])
-                .or_insert(0) += bigram.1;
+                .or_insert(0) += bigram.1 as u32;
         }
         previous_letter = letter;
     }
