@@ -79,7 +79,9 @@
 
           craneLib = (crane.mkLib pkgs).overrideToolchain toolchain;
 
-          build-deps = with pkgs; [ ];
+          build-deps = with pkgs; [
+            gcc # required for clap
+          ];
 
           unfilteredRoot = ./.; # The original, unfiltered source
 
@@ -141,13 +143,8 @@
                 nixfmt-rfc-style
                 statix
                 # rust
-                gcc # required for clap
                 rust-analyzer
-                lldb
                 toolchain
-                (pkgs.python3.withPackages (python-pkgs: [
-                  python-pkgs.matplotlib
-                ]))
               ]
               ++ build-deps;
           };
