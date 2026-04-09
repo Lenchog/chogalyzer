@@ -25,7 +25,6 @@ pub fn analyze(
     ]);
 
     if layout_letters.contains(&'*') {
-        println!("magic");
         for letter in layout_letters {
             let rule: [char; 2] = match magic_rules.get(&letter) {
                 Some(other_letter) => [letter, *other_letter],

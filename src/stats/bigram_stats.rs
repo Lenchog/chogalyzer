@@ -27,7 +27,7 @@ pub fn bigram_stats(
     let stat = bigram_stat(key1, key2);
     // If the command is the stat, we return "true" for inserting the bigram.
     // We also return a weight
-    return match stat {
+    match stat {
         Bigram::SFB => {
             stats.sfb += 1;
             let distance_y = key1.row.abs_diff(key2.row);
@@ -72,7 +72,7 @@ pub fn bigram_stats(
             (command == "lsb" || command == "hsb", 30)
         }
         Bigram::None => (false, 0),
-    };
+    }
 }
 
 /// Get bigram stats
