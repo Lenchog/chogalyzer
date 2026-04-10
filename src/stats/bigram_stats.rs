@@ -84,15 +84,15 @@ pub fn bigram_stat(key1: &Key, key2: &Key) -> Bigram {
             // are the keys the same?
             let sfr = key1 == key2;
             if sfr {
-                return Bigram::SFR;
+                Bigram::SFR
             } else {
-                return Bigram::SFB;
+                Bigram::SFB
             }
         } else {
             // We can't return immediately in case it's multiple stats
             let lsb = ls(key1, key2);
             let scissor = scissor(key1, key2);
-            return if scissor == 1 {
+            if scissor == 1 {
                 if lsb {
                     Bigram::HSLSB
                 } else {
@@ -105,13 +105,13 @@ pub fn bigram_stat(key1: &Key, key2: &Key) -> Bigram {
                     Bigram::FSB
                 }
             } else if lsb {
-                return Bigram::LSB;
+                Bigram::LSB
             } else {
-                return Bigram::None;
-            };
-        };
+                Bigram::None
+            }
+        }
     } else {
-        return Bigram::None;
+        Bigram::None
     }
 }
 
@@ -236,4 +236,68 @@ pub fn scissor(key1: &Key, key2: &Key) -> u8 {
         return distance;
     }
     0
+}
+#[cfg(test)]
+mod tests {
+    use crate::{
+        load_two_keys,
+        stats::bigram_stats::{bigram_stat, Bigram},
+    };
+
+    #[test]
+    fn test_sfb() {
+        let strings = Vec::from(["y,", "dt", "hm", "vk", "vm"]);
+        test_bigram(strings, Bigram::SFB);
+    }
+
+    #[test]
+    fn test_sfr() {
+        let strings = Vec::from(["ll"]);
+        test_bigram(strings, Bigram::SFR);
+    }
+
+    #[test]
+    fn test_fsb() {
+        let strings = Vec::from(["pf", "cd"]);
+        test_bigram(strings, Bigram::FSB);
+    }
+
+    #[test]
+    fn test_hsb() {
+        let strings = Vec::from(["nc", "ft", "ct"]);
+        test_bigram(strings, Bigram::HSB);
+    }
+
+    #[test]
+    fn test_lsb() {
+        let strings = Vec::from(["tm", "sm", "iz", "'e"]);
+        test_bigram(strings, Bigram::LSB);
+    }
+
+    #[test]
+    fn test_fslsb() {
+        let strings = Vec::from(["pv", "z;"]);
+        test_bigram(strings, Bigram::FSLSB);
+    }
+
+    #[test]
+    fn test_hslsb() {
+        let strings = Vec::from(["pm", "dm"]);
+        test_bigram(strings, Bigram::HSLSB);
+    }
+
+    // TODO add tests for non scissor row jumps
+    #[test]
+    fn test_none() {
+        let strings = Vec::from(["th", "ou", "dg"]);
+        test_bigram(strings, Bigram::None);
+    }
+
+    fn test_bigram(strings: Vec<&str>, expected_stat: Bigram) {
+        for string in strings {
+            let (key1, key2) = load_two_keys(string);
+            let stat = bigram_stat(&key1, &key2);
+            assert_eq!(stat, expected_stat);
+        }
+    }
 }

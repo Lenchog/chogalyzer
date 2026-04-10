@@ -193,7 +193,6 @@ mod tests {
         for string in strings {
             let (key1, key2, key3) = load_three_keys(string);
             let stat = trigram_stat(&key1, &key2, &key3);
-            dbg!(&stat);
             assert_eq!(stat, expected_stat);
         }
     }
