@@ -40,31 +40,13 @@ fn bench_bigram_stats(bencher: Bencher, letters: &str) {
 
     let (key1, key2) = load_two_keys(letters);
     bencher.bench(|| {
-        bigram_stats(&key1, &key2, "bench", &mut stats, &finger_weights, false);
+        bigram_stats(&key1, &key2, "bench", &mut stats, &finger_weights);
     })
 }
 fn bench_scissor(bencher: Bencher, letters: &str) {
     let (key1, key2) = load_two_keys(letters);
     bencher.bench(|| {
         scissor(&key1, &key2);
-    })
-}
-
-fn bench_skipgram_stats(bencher: Bencher, letters: &str) {
-    let command = &String::from("bench");
-    let finger_weights = load_finger_weights();
-    let mut stats = Stats::default();
-
-    let (key1, key2, epic_key) = load_three_keys(letters);
-    bencher.bench(|| {
-        skipgram_stats(
-            &key1,
-            &key2,
-            &epic_key,
-            command,
-            &mut stats,
-            &finger_weights,
-        );
     })
 }
 

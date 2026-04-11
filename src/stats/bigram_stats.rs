@@ -30,16 +30,7 @@ pub fn bigram_stats(
     match stat {
         Bigram::SFB => {
             stats.sfb += 1;
-            let distance_y = key1.row.abs_diff(key2.row);
-            // If they're either both lateral or both not lateral,
-            // we don't need to do pythag for distance
-            let distance: u8 = if key1.lateral == key2.lateral {
-                distance_y
-            // Otherwise, we do need to do pythag
-            } else {
-                (distance_y.pow(2) + 1).isqrt()
-            };
-            let penalty = 5 * finger_weights[&key1.finger] * distance as i64;
+            let penalty = 5 * finger_weights[&key1.finger] * distance(key1, key2) as i64;
             stats.fspeed += penalty;
             (command == "sfb", 5 * penalty)
         }
@@ -114,89 +105,49 @@ pub fn bigram_stat(key1: &Key, key2: &Key) -> Bigram {
         Bigram::None
     }
 }
-
 /// Get skipgram stats
-// Eww repeated code TODO
 pub fn skipgram_stats(
     key1: &Key,
     key2: &Key,
-    epic_key1: &Key,
     command: &str,
     stats: &mut Stats,
     finger_weights: &AHashMap<Finger, i64>,
 ) -> bool {
-    let mut insert_ngram = false;
+    let stat = bigram_stat(key1, key2);
     stats.skipgrams += 1;
-    if key1.hand == key2.hand && key1.finger != Finger::Thumb && key2.finger != Finger::Thumb {
-        if key1.finger == key2.finger && key1.row != key2.row {
-            let dy = key1.row.abs_diff(key2.row);
-            let distance = if key1.lateral == key2.lateral {
-                dy.max(1)
-            } else {
-                (dy.pow(2) + 1).isqrt()
-            };
-            stats.fspeed += distance as i64 * finger_weights[&key1.finger];
+    // Bottom line of each arm corrosponds ot
+    match stat {
+        Bigram::SFB => {
             stats.sfs += 1;
-            if command == "sfs" {
-                insert_ngram = true;
-            }
-        } else {
-            if key1.lateral || key2.lateral {
-                stats.lss += 1;
-                if command == "lss" {
-                    insert_ngram = true;
-                }
-            }
-            match scissor(key1, key2) {
-                1 => {
-                    stats.hss += 1;
-                    if command == "hss" {
-                        insert_ngram = true;
-                    }
-                }
-                2 => {
-                    stats.fss += 1;
-                    if command == "fss" {
-                        insert_ngram = true;
-                    }
-                }
-                _ => {}
-            }
+            let penalty = finger_weights[&key1.finger] * distance(key1, key2) as i64;
+            stats.fspeed += penalty;
+            command == "sfb"
         }
-
-        if epic_key1.hand == key2.hand {
-            stats.skipgrams += 1;
-            if epic_key1.finger == key2.finger && epic_key1 != key2 {
-                stats.sfs += 1;
-                if command == "sfs" {
-                    insert_ngram = true;
-                }
-            }
-            if key2.lateral || epic_key1.lateral && epic_key1 != key2 {
-                stats.lss += 1;
-                if command == "lss" {
-                    insert_ngram = true;
-                }
-            }
-            match scissor(key1, key2) {
-                1 => {
-                    stats.hss += 1;
-                    if command == "hss" {
-                        insert_ngram = true;
-                    }
-                }
-                2 => {
-                    stats.fss += 1;
-                    if command == "fss" {
-                        insert_ngram = true;
-                    }
-                }
-                _ => {}
-            }
+        Bigram::FSB => {
+            stats.fss += 1;
+            command == "fsb"
         }
+        Bigram::HSB => {
+            stats.hss += 1;
+            command == "hsb"
+        }
+        Bigram::LSB => {
+            stats.lss += 1;
+            command == "lsb"
+        }
+        Bigram::FSLSB => {
+            stats.fss += 1;
+            stats.lss += 1;
+            command == "lsb" || command == "fsb"
+        }
+        Bigram::HSLSB => {
+            stats.hss += 1;
+            stats.lss += 1;
+            command == "lsb" || command == "hsb"
+        }
+        // None or SFR
+        _ => false,
     }
-
-    insert_ngram
 }
 
 /// Check if bigram is on the same finger, and not a repeat
@@ -219,6 +170,7 @@ pub fn ls(key1: &Key, key2: &Key) -> bool {
 /// Check the intensity of a scissor.
 /// 0 => not a scissor, 1 => Half Scissor, 2 => Full Scissor
 // TODO maybe turn that into an enum
+// TODO this is really disgusting
 pub fn scissor(key1: &Key, key2: &Key) -> u8 {
     let distance: u8 = (i64::from(key1.row) - i64::from(key2.row))
         .abs()
@@ -237,6 +189,19 @@ pub fn scissor(key1: &Key, key2: &Key) -> u8 {
     }
     0
 }
+
+fn distance(key1: &Key, key2: &Key) -> u8 {
+    let distance_y = key1.row.abs_diff(key2.row);
+    // If they're either both lateral or both not lateral,
+    // we don't need to do pythag for distance
+    if key1.lateral == key2.lateral {
+        distance_y
+    // Otherwise, we do need to do pythag
+    } else {
+        (distance_y.pow(2) + 1).isqrt()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{

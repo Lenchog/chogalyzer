@@ -13,7 +13,7 @@ pub fn analyze(
     magic_rules: &AHashMap<char, char>,
 ) -> Stats {
     let layout = layout_raw_to_table(&layout_letters);
-    let [mut previous_letter, mut skip_previous_letter, mut epic_previous_letter] = ['_'; 3];
+    let [mut previous_letter, mut skip_previous_letter] = ['_'; 2];
     let mut stats: Stats = Stats::default();
     let mut char_freq: AHashMap<char, u32> = AHashMap::default();
     let finger_weights: AHashMap<Finger, i64> = AHashMap::from([
@@ -39,7 +39,6 @@ pub fn analyze(
         let key = &layout[&letter];
         let previous_key = &layout[&previous_letter];
         let skip_previous_key = &layout[&skip_previous_letter];
-        let epic_previous_key = &layout[&epic_previous_letter];
         stats.chars += 1;
 
         *char_freq.entry(letter).or_insert(0) += 1;
@@ -60,7 +59,6 @@ pub fn analyze(
         let skipgram = bigram_stats::skipgram_stats(
             skip_previous_key,
             key,
-            epic_previous_key,
             command,
             &mut stats,
             &finger_weights,
@@ -79,9 +77,6 @@ pub fn analyze(
                 .ngram_table
                 .entry([skip_previous_letter, previous_letter, letter])
                 .or_insert(0) += 1;
-        }
-        if !epic_previous_key.hand == key.hand {
-            epic_previous_letter = letter;
         }
         skip_previous_letter = previous_letter;
         previous_letter = letter;
