@@ -1,5 +1,5 @@
 {
-  description = "Lenchog's epic analyzer with _special_ Skipgrams";
+  description = "Lenchog's analyzer";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";

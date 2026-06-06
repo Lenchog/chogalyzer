@@ -9,7 +9,7 @@ clap = { version = "4.5.26", features = ["derive"] }
 indicatif = "0.18"
 rand = "0.10"
 shuffle = "0.2"
-tabled = "0.20"
+tabled = "0.21"
 
 [profile.release]
 codegen-units = 1
