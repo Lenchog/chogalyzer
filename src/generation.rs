@@ -258,7 +258,7 @@ fn annealing_func(old: f64, new: f64, temperature: f64) -> bool {
     let mut rng = ThreadRng::default();
     let delta: f64 = new - old;
     let probability = 1.0 / (1.0 + (delta / temperature).exp());
-    rng.random_range(0.0..1.0) > probability || new > old
+    rng.random_range(0.0..1.0) > probability
 }
 
 /// Swaps two columns on a layout
